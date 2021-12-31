@@ -11,6 +11,7 @@ import org.whispersystems.libsignal.ecc.ECPublicKey;
 import org.whispersystems.libsignal.protocol.CiphertextMessage;
 import org.whispersystems.libsignal.protocol.PreKeySignalMessage;
 import org.whispersystems.libsignal.protocol.SignalMessage;
+import org.whispersystems.libsignal.ratchet.AuthKey;
 import org.whispersystems.libsignal.ratchet.ChainKey;
 import org.whispersystems.libsignal.ratchet.MessageKeys;
 import org.whispersystems.libsignal.ratchet.RootKey;
@@ -21,8 +22,7 @@ import org.whispersystems.libsignal.state.SessionRecord;
 import org.whispersystems.libsignal.state.SessionState;
 import org.whispersystems.libsignal.state.SessionStore;
 import org.whispersystems.libsignal.state.SignedPreKeyStore;
-import org.whispersystems.libsignal.util.ByteUtil;
-import org.whispersystems.libsignal.util.Pair;
+import org.whispersystems.libsignal.util.Triplet;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -348,9 +348,9 @@ public class SessionCipher {
       } else {
         RootKey                 rootKey         = sessionState.getRootKey();
         ECKeyPair               ourEphemeral    = sessionState.getSenderRatchetKeyPair();
-        Pair<RootKey, ChainKey> receiverChain   = rootKey.createChain(theirEphemeral, ourEphemeral);
+        Triplet<RootKey, ChainKey, AuthKey> receiverChain   = rootKey.createChain(theirEphemeral, ourEphemeral);
         ECKeyPair               ourNewEphemeral = Curve.generateKeyPair();
-        Pair<RootKey, ChainKey> senderChain     = receiverChain.first().createChain(theirEphemeral, ourNewEphemeral);
+        Triplet<RootKey, ChainKey, AuthKey> senderChain     = receiverChain.first().createChain(theirEphemeral, ourNewEphemeral);
 
         sessionState.setRootKey(senderChain.first());
         sessionState.addReceiverChain(theirEphemeral, receiverChain.second());

@@ -13,6 +13,7 @@ import org.whispersystems.libsignal.kdf.DerivedRootSecrets;
 import org.whispersystems.libsignal.kdf.HKDF;
 import org.whispersystems.libsignal.util.ByteUtil;
 import org.whispersystems.libsignal.util.Pair;
+import org.whispersystems.libsignal.util.Triplet;
 
 public class RootKey {
 
@@ -28,7 +29,7 @@ public class RootKey {
     return key;
   }
 
-  public Pair<RootKey, ChainKey> createChain(ECPublicKey theirRatchetKey, ECKeyPair ourRatchetKey)
+  public Triplet<RootKey, ChainKey, AuthKey> createChain(ECPublicKey theirRatchetKey, ECKeyPair ourRatchetKey)
       throws InvalidKeyException
   {
     byte[]             sharedSecret       = Curve.calculateAgreement(theirRatchetKey, ourRatchetKey.getPrivateKey());
@@ -37,7 +38,8 @@ public class RootKey {
 
     RootKey  newRootKey  = new RootKey(kdf, derivedSecrets.getRootKey());
     ChainKey newChainKey = new ChainKey(kdf, derivedSecrets.getChainKey(), 0);
+    AuthKey newAuthKey = new AuthKey(derivedSecrets.getAuthKey(), derivedSecrets.getAuthKey(), 0);
 
-    return new Pair<>(newRootKey, newChainKey);
+    return new Triplet<>(newRootKey, newChainKey, newAuthKey);
   }
 }

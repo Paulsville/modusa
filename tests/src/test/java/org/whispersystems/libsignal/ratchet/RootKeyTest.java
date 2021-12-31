@@ -8,7 +8,7 @@ import org.whispersystems.libsignal.ecc.ECKeyPair;
 import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 import org.whispersystems.libsignal.kdf.HKDF;
-import org.whispersystems.libsignal.util.Pair;
+import org.whispersystems.libsignal.util.Triplet;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -71,7 +71,7 @@ public class RootKeyTest extends TestCase {
     ECPublicKey bobPublicKey = Curve.decodePoint(bobPublic, 0);
     RootKey     rootKey      = new RootKey(HKDF.createFor(2), rootKeySeed);
 
-    Pair<RootKey, ChainKey> rootKeyChainKeyPair = rootKey.createChain(bobPublicKey, aliceKeyPair);
+    Triplet<RootKey, ChainKey, AuthKey> rootKeyChainKeyPair = rootKey.createChain(bobPublicKey, aliceKeyPair);
     RootKey                 nextRootKey         = rootKeyChainKeyPair.first();
     ChainKey                nextChainKey        = rootKeyChainKeyPair.second();
 

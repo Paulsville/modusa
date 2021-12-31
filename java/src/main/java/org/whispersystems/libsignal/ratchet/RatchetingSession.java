@@ -14,7 +14,7 @@ import org.whispersystems.libsignal.kdf.HKDFv3;
 import org.whispersystems.libsignal.protocol.CiphertextMessage;
 import org.whispersystems.libsignal.state.SessionState;
 import org.whispersystems.libsignal.util.ByteUtil;
-import org.whispersystems.libsignal.util.Pair;
+import org.whispersystems.libsignal.util.Triplet;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.io.ByteArrayOutputStream;
@@ -77,7 +77,7 @@ public class RatchetingSession {
       }
 
       DerivedKeys             derivedKeys  = calculateDerivedKeys(secrets.toByteArray());
-      Pair<RootKey, ChainKey> sendingChain = derivedKeys.getRootKey().createChain(parameters.getTheirRatchetKey(), sendingRatchetKey);
+      Triplet<RootKey, ChainKey, AuthKey> sendingChain = derivedKeys.getRootKey().createChain(parameters.getTheirRatchetKey(), sendingRatchetKey);
 
       sessionState.addReceiverChain(parameters.getTheirRatchetKey(), derivedKeys.getChainKey());
       sessionState.setSenderChain(sendingRatchetKey, sendingChain.second());

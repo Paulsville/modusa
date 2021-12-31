@@ -23,6 +23,14 @@ message SessionStructure {
         }
 
         repeated MessageKey messageKeys = 4;
+
+        message AuthKey {
+            optional uint32 index = 1;
+            optional bytes  key = 2;
+            optional bytes  lastKey = 3;
+        }
+
+        optional AuthKey authKey = 5;
     }
 
     message PendingKeyExchange {

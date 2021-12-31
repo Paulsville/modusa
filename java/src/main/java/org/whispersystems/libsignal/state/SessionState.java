@@ -18,6 +18,7 @@ import org.whispersystems.libsignal.ecc.ECPrivateKey;
 import org.whispersystems.libsignal.ecc.ECPublicKey;
 import org.whispersystems.libsignal.kdf.HKDF;
 import org.whispersystems.libsignal.logging.Log;
+import org.whispersystems.libsignal.ratchet.AuthKey;
 import org.whispersystems.libsignal.ratchet.ChainKey;
 import org.whispersystems.libsignal.ratchet.MessageKeys;
 import org.whispersystems.libsignal.ratchet.RootKey;
@@ -244,6 +245,24 @@ public class SessionState {
 
     Chain chain = sessionStructure.getSenderChain().toBuilder()
                                   .setChainKey(chainKey).build();
+
+    this.sessionStructure = this.sessionStructure.toBuilder().setSenderChain(chain).build();
+  }
+
+  public AuthKey getAuthKey() {
+    Chain.AuthKey authKey = sessionStructure.getSenderChain().getAuthKey();
+    return new AuthKey(authKey.getKey().toByteArray(),
+                       authKey.getLastKey().toByteArray(),
+                       authKey.getIndex());
+  }
+
+  public void setAuthKey(AuthKey nextAuthKey) {
+    Chain.AuthKey authKey = Chain.AuthKey.newBuilder()
+            .setKey(ByteString.copyFrom(nextAuthKey.getKeyBytes()))
+            .setLastKey(ByteString.copyFrom(nextAuthKey.getLastKeyBytes()))
+            .setIndex(nextAuthKey.getIndex())
+            .build();
+    Chain chain = sessionStructure.getSenderChain().toBuilder().setAuthKey(authKey).build();
 
     this.sessionStructure = this.sessionStructure.toBuilder().setSenderChain(chain).build();
   }

@@ -7,6 +7,12 @@ package org.whispersystems.libsignal.fingerprint;
 
 import org.whispersystems.libsignal.util.ByteUtil;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
 public class DisplayableFingerprint {
 
   private final String localFingerprintNumbers;

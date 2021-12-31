@@ -9,7 +9,11 @@ import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.util.ByteUtil;
 import org.whispersystems.libsignal.util.IdentityKeyComparator;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -113,8 +117,14 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
         hash = digest.digest(publicKey);
       }
 
-      return hash;
-    } catch (NoSuchAlgorithmException e) {
+      // temp - calculate MAC over the hash instead of just returning it
+      // TODO update with correct MODUSA fingerprinting
+      Mac mac = Mac.getInstance("HmacSHA256");
+      mac.init(new SecretKeySpec(publicKey, "HmacSHA256"));
+
+      return mac.doFinal(hash);
+
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       throw new AssertionError(e);
     }
   }
