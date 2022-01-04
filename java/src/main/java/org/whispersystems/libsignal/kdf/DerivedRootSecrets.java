@@ -6,7 +6,6 @@
 package org.whispersystems.libsignal.kdf;
 
 import org.whispersystems.libsignal.util.ByteUtil;
-import sun.jvm.hotspot.utilities.AssertionFailure;
 
 import java.text.ParseException;
 

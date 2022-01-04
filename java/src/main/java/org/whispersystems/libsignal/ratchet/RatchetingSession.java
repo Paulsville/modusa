@@ -19,6 +19,7 @@ import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 
 public class RatchetingSession {
@@ -76,7 +77,7 @@ public class RatchetingSession {
                                                parameters.getOurBaseKey().getPrivateKey()));
       }
 
-      DerivedKeys             derivedKeys  = calculateDerivedKeys(secrets.toByteArray());
+      DerivedKeys             derivedKeys  = calculateDerivedKeys(secrets.toByteArray(), sessionState.getAuthKey().getKeyBytes());
       Triplet<RootKey, ChainKey, AuthKey> sendingChain = derivedKeys.getRootKey().createChain(parameters.getTheirRatchetKey(), sendingRatchetKey);
 
       sessionState.addReceiverChain(parameters.getTheirRatchetKey(), derivedKeys.getChainKey());
@@ -112,7 +113,7 @@ public class RatchetingSession {
                                                parameters.getOurOneTimePreKey().get().getPrivateKey()));
       }
 
-      DerivedKeys derivedKeys = calculateDerivedKeys(secrets.toByteArray());
+      DerivedKeys derivedKeys = calculateDerivedKeys(secrets.toByteArray(), sessionState.getAuthKey().getKeyBytes());
 
       sessionState.setSenderChain(parameters.getOurRatchetKey(), derivedKeys.getChainKey());
       sessionState.setRootKey(derivedKeys.getRootKey());
@@ -127,13 +128,19 @@ public class RatchetingSession {
     return discontinuity;
   }
 
-  private static DerivedKeys calculateDerivedKeys(byte[] masterSecret) {
+  private static DerivedKeys calculateDerivedKeys(byte[] masterSecret, byte[] lastAuthKey) throws InvalidKeyException {
     HKDF     kdf                = new HKDFv3();
-    byte[]   derivedSecretBytes = kdf.deriveSecrets(masterSecret, "WhisperText".getBytes(), 64);
-    byte[][] derivedSecrets     = ByteUtil.split(derivedSecretBytes, 32, 32);
+    byte[]   derivedSecretBytes = kdf.deriveSecrets(masterSecret, "WhisperText".getBytes(), 96);
+    byte[][] derivedSecrets;
+    try {
+      derivedSecrets = ByteUtil.split(derivedSecretBytes, 32, 32, 32);
+    } catch(ParseException e) {
+      throw new InvalidKeyException();
+    }
 
     return new DerivedKeys(new RootKey(kdf, derivedSecrets[0]),
-                           new ChainKey(kdf, derivedSecrets[1], 0));
+                           new ChainKey(kdf, derivedSecrets[1], 0),
+                           new AuthKey(derivedSecrets[2], lastAuthKey, 0));
   }
 
   private static boolean isAlice(ECPublicKey ourKey, ECPublicKey theirKey) {
@@ -143,10 +150,12 @@ public class RatchetingSession {
   private static class DerivedKeys {
     private final RootKey   rootKey;
     private final ChainKey  chainKey;
+    private final AuthKey   authKey;
 
-    private DerivedKeys(RootKey rootKey, ChainKey chainKey) {
+    private DerivedKeys(RootKey rootKey, ChainKey chainKey, AuthKey authKey) {
       this.rootKey   = rootKey;
       this.chainKey  = chainKey;
+      this.authKey = authKey;
     }
 
     public RootKey getRootKey() {

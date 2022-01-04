@@ -428,6 +428,26 @@ public final class StorageProtos {
        * <code>optional .textsecure.SessionStructure.Chain.AuthKey authKey = 5;</code>
        */
       org.whispersystems.libsignal.state.StorageProtos.SessionStructure.Chain.AuthKeyOrBuilder getAuthKeyOrBuilder();
+
+      // optional bytes fprintHash = 6;
+      /**
+       * <code>optional bytes fprintHash = 6;</code>
+       */
+      boolean hasFprintHash();
+      /**
+       * <code>optional bytes fprintHash = 6;</code>
+       */
+      com.google.protobuf.ByteString getFprintHash();
+
+      // optional bytes lastFprintHash = 7;
+      /**
+       * <code>optional bytes lastFprintHash = 7;</code>
+       */
+      boolean hasLastFprintHash();
+      /**
+       * <code>optional bytes lastFprintHash = 7;</code>
+       */
+      com.google.protobuf.ByteString getLastFprintHash();
     }
     /**
      * Protobuf type {@code textsecure.SessionStructure.Chain}
@@ -522,6 +542,16 @@ public final class StorageProtos {
                   authKey_ = subBuilder.buildPartial();
                 }
                 bitField0_ |= 0x00000008;
+                break;
+              }
+              case 50: {
+                bitField0_ |= 0x00000010;
+                fprintHash_ = input.readBytes();
+                break;
+              }
+              case 58: {
+                bitField0_ |= 0x00000020;
+                lastFprintHash_ = input.readBytes();
                 break;
               }
             }
@@ -2371,12 +2401,46 @@ public final class StorageProtos {
         return authKey_;
       }
 
+      // optional bytes fprintHash = 6;
+      public static final int FPRINTHASH_FIELD_NUMBER = 6;
+      private com.google.protobuf.ByteString fprintHash_;
+      /**
+       * <code>optional bytes fprintHash = 6;</code>
+       */
+      public boolean hasFprintHash() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional bytes fprintHash = 6;</code>
+       */
+      public com.google.protobuf.ByteString getFprintHash() {
+        return fprintHash_;
+      }
+
+      // optional bytes lastFprintHash = 7;
+      public static final int LASTFPRINTHASH_FIELD_NUMBER = 7;
+      private com.google.protobuf.ByteString lastFprintHash_;
+      /**
+       * <code>optional bytes lastFprintHash = 7;</code>
+       */
+      public boolean hasLastFprintHash() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional bytes lastFprintHash = 7;</code>
+       */
+      public com.google.protobuf.ByteString getLastFprintHash() {
+        return lastFprintHash_;
+      }
+
       private void initFields() {
         senderRatchetKey_ = com.google.protobuf.ByteString.EMPTY;
         senderRatchetKeyPrivate_ = com.google.protobuf.ByteString.EMPTY;
         chainKey_ = org.whispersystems.libsignal.state.StorageProtos.SessionStructure.Chain.ChainKey.getDefaultInstance();
         messageKeys_ = java.util.Collections.emptyList();
         authKey_ = org.whispersystems.libsignal.state.StorageProtos.SessionStructure.Chain.AuthKey.getDefaultInstance();
+        fprintHash_ = com.google.protobuf.ByteString.EMPTY;
+        lastFprintHash_ = com.google.protobuf.ByteString.EMPTY;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -2404,6 +2468,12 @@ public final class StorageProtos {
         }
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           output.writeMessage(5, authKey_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          output.writeBytes(6, fprintHash_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          output.writeBytes(7, lastFprintHash_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -2433,6 +2503,14 @@ public final class StorageProtos {
         if (((bitField0_ & 0x00000008) == 0x00000008)) {
           size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(5, authKey_);
+        }
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(6, fprintHash_);
+        }
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(7, lastFprintHash_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2575,6 +2653,10 @@ public final class StorageProtos {
             authKeyBuilder_.clear();
           }
           bitField0_ = (bitField0_ & ~0x00000010);
+          fprintHash_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000020);
+          lastFprintHash_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000040);
           return this;
         }
 
@@ -2636,6 +2718,14 @@ public final class StorageProtos {
           } else {
             result.authKey_ = authKeyBuilder_.build();
           }
+          if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+            to_bitField0_ |= 0x00000010;
+          }
+          result.fprintHash_ = fprintHash_;
+          if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+            to_bitField0_ |= 0x00000020;
+          }
+          result.lastFprintHash_ = lastFprintHash_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -2689,6 +2779,12 @@ public final class StorageProtos {
           }
           if (other.hasAuthKey()) {
             mergeAuthKey(other.getAuthKey());
+          }
+          if (other.hasFprintHash()) {
+            setFprintHash(other.getFprintHash());
+          }
+          if (other.hasLastFprintHash()) {
+            setLastFprintHash(other.getLastFprintHash());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -3261,6 +3357,78 @@ public final class StorageProtos {
             authKey_ = null;
           }
           return authKeyBuilder_;
+        }
+
+        // optional bytes fprintHash = 6;
+        private com.google.protobuf.ByteString fprintHash_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes fprintHash = 6;</code>
+         */
+        public boolean hasFprintHash() {
+          return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+        /**
+         * <code>optional bytes fprintHash = 6;</code>
+         */
+        public com.google.protobuf.ByteString getFprintHash() {
+          return fprintHash_;
+        }
+        /**
+         * <code>optional bytes fprintHash = 6;</code>
+         */
+        public Builder setFprintHash(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+          fprintHash_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes fprintHash = 6;</code>
+         */
+        public Builder clearFprintHash() {
+          bitField0_ = (bitField0_ & ~0x00000020);
+          fprintHash_ = getDefaultInstance().getFprintHash();
+          onChanged();
+          return this;
+        }
+
+        // optional bytes lastFprintHash = 7;
+        private com.google.protobuf.ByteString lastFprintHash_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes lastFprintHash = 7;</code>
+         */
+        public boolean hasLastFprintHash() {
+          return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+        /**
+         * <code>optional bytes lastFprintHash = 7;</code>
+         */
+        public com.google.protobuf.ByteString getLastFprintHash() {
+          return lastFprintHash_;
+        }
+        /**
+         * <code>optional bytes lastFprintHash = 7;</code>
+         */
+        public Builder setLastFprintHash(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+          lastFprintHash_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes lastFprintHash = 7;</code>
+         */
+        public Builder clearLastFprintHash() {
+          bitField0_ = (bitField0_ & ~0x00000040);
+          lastFprintHash_ = getDefaultInstance().getLastFprintHash();
+          onChanged();
+          return this;
         }
 
         // @@protoc_insertion_point(builder_scope:textsecure.SessionStructure.Chain)
@@ -12378,7 +12546,7 @@ public final class StorageProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\032LocalStorageProtocol.proto\022\ntextsecure" +
-      "\"\310\t\n\020SessionStructure\022\026\n\016sessionVersion\030" +
+      "\"\364\t\n\020SessionStructure\022\026\n\016sessionVersion\030" +
       "\001 \001(\r\022\033\n\023localIdentityPublic\030\002 \001(\014\022\034\n\024re" +
       "moteIdentityPublic\030\003 \001(\014\022\017\n\007rootKey\030\004 \001(" +
       "\014\022\027\n\017previousCounter\030\005 \001(\r\0227\n\013senderChai" +
@@ -12390,50 +12558,51 @@ public final class StorageProtos {
       "\001(\0132*.textsecure.SessionStructure.Pendin" +
       "gPreKey\022\034\n\024remoteRegistrationId\030\n \001(\r\022\033\n" +
       "\023localRegistrationId\030\013 \001(\r\022\024\n\014needsRefre" +
-      "sh\030\014 \001(\010\022\024\n\014aliceBaseKey\030\r \001(\014\032\256\003\n\005Chain" +
+      "sh\030\014 \001(\010\022\024\n\014aliceBaseKey\030\r \001(\014\032\332\003\n\005Chain" +
       "\022\030\n\020senderRatchetKey\030\001 \001(\014\022\037\n\027senderRatc" +
       "hetKeyPrivate\030\002 \001(\014\022=\n\010chainKey\030\003 \001(\0132+." +
       "textsecure.SessionStructure.Chain.ChainK" +
       "ey\022B\n\013messageKeys\030\004 \003(\0132-.textsecure.Ses" +
       "sionStructure.Chain.MessageKey\022;\n\007authKe" +
       "y\030\005 \001(\0132*.textsecure.SessionStructure.Ch",
-      "ain.AuthKey\032&\n\010ChainKey\022\r\n\005index\030\001 \001(\r\022\013" +
-      "\n\003key\030\002 \001(\014\032J\n\nMessageKey\022\r\n\005index\030\001 \001(\r" +
-      "\022\021\n\tcipherKey\030\002 \001(\014\022\016\n\006macKey\030\003 \001(\014\022\n\n\002i" +
-      "v\030\004 \001(\014\0326\n\007AuthKey\022\r\n\005index\030\001 \001(\r\022\013\n\003key" +
-      "\030\002 \001(\014\022\017\n\007lastKey\030\003 \001(\014\032\315\001\n\022PendingKeyEx" +
-      "change\022\020\n\010sequence\030\001 \001(\r\022\024\n\014localBaseKey" +
-      "\030\002 \001(\014\022\033\n\023localBaseKeyPrivate\030\003 \001(\014\022\027\n\017l" +
-      "ocalRatchetKey\030\004 \001(\014\022\036\n\026localRatchetKeyP" +
-      "rivate\030\005 \001(\014\022\030\n\020localIdentityKey\030\007 \001(\014\022\037" +
-      "\n\027localIdentityKeyPrivate\030\010 \001(\014\032J\n\rPendi",
-      "ngPreKey\022\020\n\010preKeyId\030\001 \001(\r\022\026\n\016signedPreK" +
-      "eyId\030\003 \001(\005\022\017\n\007baseKey\030\002 \001(\014\"\177\n\017RecordStr" +
-      "ucture\0224\n\016currentSession\030\001 \001(\0132\034.textsec" +
-      "ure.SessionStructure\0226\n\020previousSessions" +
-      "\030\002 \003(\0132\034.textsecure.SessionStructure\"J\n\025" +
-      "PreKeyRecordStructure\022\n\n\002id\030\001 \001(\r\022\021\n\tpub" +
-      "licKey\030\002 \001(\014\022\022\n\nprivateKey\030\003 \001(\014\"v\n\033Sign" +
-      "edPreKeyRecordStructure\022\n\n\002id\030\001 \001(\r\022\021\n\tp" +
-      "ublicKey\030\002 \001(\014\022\022\n\nprivateKey\030\003 \001(\014\022\021\n\tsi" +
-      "gnature\030\004 \001(\014\022\021\n\ttimestamp\030\005 \001(\006\"A\n\030Iden",
-      "tityKeyPairStructure\022\021\n\tpublicKey\030\001 \001(\014\022" +
-      "\022\n\nprivateKey\030\002 \001(\014\"\270\003\n\027SenderKeyStateSt" +
-      "ructure\022\023\n\013senderKeyId\030\001 \001(\r\022J\n\016senderCh" +
-      "ainKey\030\002 \001(\01322.textsecure.SenderKeyState" +
-      "Structure.SenderChainKey\022N\n\020senderSignin" +
-      "gKey\030\003 \001(\01324.textsecure.SenderKeyStateSt" +
-      "ructure.SenderSigningKey\022O\n\021senderMessag" +
-      "eKeys\030\004 \003(\01324.textsecure.SenderKeyStateS" +
-      "tructure.SenderMessageKey\0321\n\016SenderChain" +
-      "Key\022\021\n\titeration\030\001 \001(\r\022\014\n\004seed\030\002 \001(\014\0323\n\020",
-      "SenderMessageKey\022\021\n\titeration\030\001 \001(\r\022\014\n\004s" +
-      "eed\030\002 \001(\014\0323\n\020SenderSigningKey\022\016\n\006public\030" +
-      "\001 \001(\014\022\017\n\007private\030\002 \001(\014\"X\n\030SenderKeyRecor" +
-      "dStructure\022<\n\017senderKeyStates\030\001 \003(\0132#.te" +
-      "xtsecure.SenderKeyStateStructureB3\n\"org." +
-      "whispersystems.libsignal.stateB\rStorageP" +
-      "rotos"
+      "ain.AuthKey\022\022\n\nfprintHash\030\006 \001(\014\022\026\n\016lastF" +
+      "printHash\030\007 \001(\014\032&\n\010ChainKey\022\r\n\005index\030\001 \001" +
+      "(\r\022\013\n\003key\030\002 \001(\014\032J\n\nMessageKey\022\r\n\005index\030\001" +
+      " \001(\r\022\021\n\tcipherKey\030\002 \001(\014\022\016\n\006macKey\030\003 \001(\014\022" +
+      "\n\n\002iv\030\004 \001(\014\0326\n\007AuthKey\022\r\n\005index\030\001 \001(\r\022\013\n" +
+      "\003key\030\002 \001(\014\022\017\n\007lastKey\030\003 \001(\014\032\315\001\n\022PendingK" +
+      "eyExchange\022\020\n\010sequence\030\001 \001(\r\022\024\n\014localBas" +
+      "eKey\030\002 \001(\014\022\033\n\023localBaseKeyPrivate\030\003 \001(\014\022" +
+      "\027\n\017localRatchetKey\030\004 \001(\014\022\036\n\026localRatchet" +
+      "KeyPrivate\030\005 \001(\014\022\030\n\020localIdentityKey\030\007 \001",
+      "(\014\022\037\n\027localIdentityKeyPrivate\030\010 \001(\014\032J\n\rP" +
+      "endingPreKey\022\020\n\010preKeyId\030\001 \001(\r\022\026\n\016signed" +
+      "PreKeyId\030\003 \001(\005\022\017\n\007baseKey\030\002 \001(\014\"\177\n\017Recor" +
+      "dStructure\0224\n\016currentSession\030\001 \001(\0132\034.tex" +
+      "tsecure.SessionStructure\0226\n\020previousSess" +
+      "ions\030\002 \003(\0132\034.textsecure.SessionStructure" +
+      "\"J\n\025PreKeyRecordStructure\022\n\n\002id\030\001 \001(\r\022\021\n" +
+      "\tpublicKey\030\002 \001(\014\022\022\n\nprivateKey\030\003 \001(\014\"v\n\033" +
+      "SignedPreKeyRecordStructure\022\n\n\002id\030\001 \001(\r\022" +
+      "\021\n\tpublicKey\030\002 \001(\014\022\022\n\nprivateKey\030\003 \001(\014\022\021",
+      "\n\tsignature\030\004 \001(\014\022\021\n\ttimestamp\030\005 \001(\006\"A\n\030" +
+      "IdentityKeyPairStructure\022\021\n\tpublicKey\030\001 " +
+      "\001(\014\022\022\n\nprivateKey\030\002 \001(\014\"\270\003\n\027SenderKeySta" +
+      "teStructure\022\023\n\013senderKeyId\030\001 \001(\r\022J\n\016send" +
+      "erChainKey\030\002 \001(\01322.textsecure.SenderKeyS" +
+      "tateStructure.SenderChainKey\022N\n\020senderSi" +
+      "gningKey\030\003 \001(\01324.textsecure.SenderKeySta" +
+      "teStructure.SenderSigningKey\022O\n\021senderMe" +
+      "ssageKeys\030\004 \003(\01324.textsecure.SenderKeySt" +
+      "ateStructure.SenderMessageKey\0321\n\016SenderC",
+      "hainKey\022\021\n\titeration\030\001 \001(\r\022\014\n\004seed\030\002 \001(\014" +
+      "\0323\n\020SenderMessageKey\022\021\n\titeration\030\001 \001(\r\022" +
+      "\014\n\004seed\030\002 \001(\014\0323\n\020SenderSigningKey\022\016\n\006pub" +
+      "lic\030\001 \001(\014\022\017\n\007private\030\002 \001(\014\"X\n\030SenderKeyR" +
+      "ecordStructure\022<\n\017senderKeyStates\030\001 \003(\0132" +
+      "#.textsecure.SenderKeyStateStructureB3\n\"" +
+      "org.whispersystems.libsignal.stateB\rStor" +
+      "ageProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -12451,7 +12620,7 @@ public final class StorageProtos {
           internal_static_textsecure_SessionStructure_Chain_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_textsecure_SessionStructure_Chain_descriptor,
-              new java.lang.String[] { "SenderRatchetKey", "SenderRatchetKeyPrivate", "ChainKey", "MessageKeys", "AuthKey", });
+              new java.lang.String[] { "SenderRatchetKey", "SenderRatchetKeyPrivate", "ChainKey", "MessageKeys", "AuthKey", "FprintHash", "LastFprintHash", });
           internal_static_textsecure_SessionStructure_Chain_ChainKey_descriptor =
             internal_static_textsecure_SessionStructure_Chain_descriptor.getNestedTypes().get(0);
           internal_static_textsecure_SessionStructure_Chain_ChainKey_fieldAccessorTable = new

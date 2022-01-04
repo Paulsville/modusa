@@ -267,6 +267,32 @@ public class SessionState {
     this.sessionStructure = this.sessionStructure.toBuilder().setSenderChain(chain).build();
   }
 
+  public byte[] getFprintHash() {
+    ByteString fprintHash = sessionStructure.getSenderChain().getFprintHash();
+    return fprintHash.toByteArray();
+  }
+
+  public void setFprintHash(byte[] nextFprintHash) {
+    ByteString nextHash = ByteString.copyFrom(nextFprintHash);
+
+    Chain chain = sessionStructure.getSenderChain().toBuilder().setFprintHash(nextHash).build();
+
+    this.sessionStructure = this.sessionStructure.toBuilder().setSenderChain(chain).build();
+  }
+
+  public byte[] getLastFprintHash() {
+    ByteString lastFprintHash = sessionStructure.getSenderChain().getLastFprintHash();
+    return lastFprintHash.toByteArray();
+  }
+
+  public void setLastFprintHash(byte[] fprintHash) {
+    ByteString nextHash = ByteString.copyFrom(fprintHash);
+
+    Chain chain = sessionStructure.getSenderChain().toBuilder().setFprintHash(nextHash).build();
+
+    this.sessionStructure = this.sessionStructure.toBuilder().setSenderChain(chain).build();
+  }
+
   public boolean hasMessageKeys(ECPublicKey senderEphemeral, int counter) {
     Pair<Chain,Integer> chainAndIndex = getReceiverChain(senderEphemeral);
     Chain               chain         = chainAndIndex.first();

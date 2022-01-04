@@ -31,6 +31,9 @@ message SessionStructure {
         }
 
         optional AuthKey authKey = 5;
+
+        optional bytes fprintHash = 6;
+        optional bytes lastFprintHash = 7;
     }
 
     message PendingKeyExchange {
