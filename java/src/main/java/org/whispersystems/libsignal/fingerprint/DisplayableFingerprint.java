@@ -7,29 +7,13 @@ package org.whispersystems.libsignal.fingerprint;
 
 import org.whispersystems.libsignal.util.ByteUtil;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
 public class DisplayableFingerprint {
 
-  private final String localFingerprintNumbers;
-  private final String remoteFingerprintNumbers;
+  private final String fprintNumbers;
 
-  DisplayableFingerprint(byte[] localFingerprint, byte[] remoteFingerprint)
+  DisplayableFingerprint(byte[] fprint)
   {
-    this.localFingerprintNumbers  = getDisplayStringFor(localFingerprint);
-    this.remoteFingerprintNumbers = getDisplayStringFor(remoteFingerprint);
-  }
-
-  public String getDisplayText() {
-    if (localFingerprintNumbers.compareTo(remoteFingerprintNumbers) <= 0) {
-      return localFingerprintNumbers + remoteFingerprintNumbers;
-    } else {
-      return remoteFingerprintNumbers + localFingerprintNumbers;
-    }
+    this.fprintNumbers  = getDisplayStringFor(fprint);
   }
 
   private String getDisplayStringFor(byte[] fingerprint) {

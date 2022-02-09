@@ -6,6 +6,8 @@
 package org.whispersystems.libsignal.fingerprint;
 
 import org.whispersystems.libsignal.IdentityKey;
+import org.whispersystems.libsignal.ratchet.AuthKey;
+import org.whispersystems.libsignal.state.PreKeyBundle;
 import org.whispersystems.libsignal.util.ByteUtil;
 import org.whispersystems.libsignal.util.IdentityKeyComparator;
 
@@ -80,47 +82,40 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
    * for the provided localIdentityKeys.
    *
    * @param version The version of fingerprint you are generating.
-   * @param localStableIdentifier The client's "stable" identifier.
-   * @param localIdentityKeys The client's collection of physical identity keys.
-   * @param remoteStableIdentifier The remote party's "stable" identifier.
-   * @param remoteIdentityKeys The remote party's collection of physical identity key.
+   * @param aKey Generated authentication keys from session state
+   * @param hash Chaining hash from session state
+   * @param genPrevKey When true, use (i-1)th key, otherwise use ith key
    * @return A unique fingerprint for this conversation.
    */
   public Fingerprint createFor(int version,
-                               byte[] localStableIdentifier,
-                               List<IdentityKey> localIdentityKeys,
-                               byte[] remoteStableIdentifier,
-                               List<IdentityKey> remoteIdentityKeys)
+                               AuthKey aKey,
+                               byte[] hash,
+                               boolean genPrevKey)
   {
-    byte[] localFingerprint  = getFingerprint(iterations, localStableIdentifier, localIdentityKeys);
-    byte[] remoteFingerprint = getFingerprint(iterations, remoteStableIdentifier, remoteIdentityKeys);
+    byte[] fprint  = getFingerprint(iterations, aKey, hash, genPrevKey);
 
-    DisplayableFingerprint displayableFingerprint = new DisplayableFingerprint(localFingerprint,
-                                                                               remoteFingerprint);
+    DisplayableFingerprint displayableFingerprint = new DisplayableFingerprint(fprint);
 
-    ScannableFingerprint   scannableFingerprint   = new ScannableFingerprint(version,
-                                                                             localFingerprint,
-                                                                             remoteFingerprint);
+    ScannableFingerprint   scannableFingerprint   = new ScannableFingerprint(version, fprint);
 
     return new Fingerprint(displayableFingerprint, scannableFingerprint);
   }
 
-  private byte[] getFingerprint(int iterations, byte[] stableIdentifier, List<IdentityKey> unsortedIdentityKeys) {
+  private byte[] getFingerprint(int iterations, AuthKey aKey,
+                                byte[] hash, boolean genPrevKey) {
     try {
       MessageDigest digest    = MessageDigest.getInstance("SHA-512");
-      byte[]        publicKey = getLogicalKeyBytes(unsortedIdentityKeys);
-      byte[]        hash      = ByteUtil.combine(ByteUtil.shortToByteArray(FINGERPRINT_VERSION),
-                                                 publicKey, stableIdentifier);
+      byte[] key = genPrevKey ? aKey.getLastKeyBytes() : aKey.getKeyBytes();
 
       for (int i=0;i<iterations;i++) {
         digest.update(hash);
-        hash = digest.digest(publicKey);
+        hash = digest.digest(key);
       }
 
       // temp - calculate MAC over the hash instead of just returning it
       // TODO update with correct MODUSA fingerprinting
       Mac mac = Mac.getInstance("HmacSHA256");
-      mac.init(new SecretKeySpec(publicKey, "HmacSHA256"));
+      mac.init(new SecretKeySpec(key, "HmacSHA256"));
 
       return mac.doFinal(hash);
 
