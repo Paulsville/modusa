@@ -58,8 +58,8 @@ public class ScannableFingerprint {
         throw new FingerprintVersionMismatchException(scanned.getVersion(), version);
       }
 
-      return MessageDigest.isEqual(fingerprints.getFingerprint().getContent().toByteArray(), scanned.getRemoteFingerprint().getContent().toByteArray()) &&
-             MessageDigest.isEqual(fingerprints.getRemoteFingerprint().getContent().toByteArray(), scanned.getLocalFingerprint().getContent().toByteArray());
+      return MessageDigest.isEqual(fingerprints.getFingerprint().getContent().toByteArray(), scanned.getFingerprint().getContent().toByteArray()) &&
+             MessageDigest.isEqual(fingerprints.getFingerprint().getContent().toByteArray(), scanned.getFingerprint().getContent().toByteArray());
     } catch (InvalidProtocolBufferException e) {
       throw new FingerprintParsingException(e);
     }

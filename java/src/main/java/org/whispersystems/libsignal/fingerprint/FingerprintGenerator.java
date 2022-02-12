@@ -6,19 +6,14 @@
 package org.whispersystems.libsignal.fingerprint;
 
 import org.whispersystems.libsignal.IdentityKey;
+import org.whispersystems.libsignal.ratchet.AuthKey;
 
 import java.util.List;
 
 public interface FingerprintGenerator {
-  public Fingerprint createFor(int version,
-                               byte[] localStableIdentifier,
-                               IdentityKey localIdentityKey,
-                               byte[] remoteStableIdentifier,
-                               IdentityKey remoteIdentityKey);
-
-  public Fingerprint createFor(int version,
-                               byte[] localStableIdentifier,
-                               List<IdentityKey> localIdentityKey,
-                               byte[] remoteStableIdentifier,
-                               List<IdentityKey> remoteIdentityKey);
+  Fingerprint createFor(int version,
+                               AuthKey aKey,
+                               AuthKey remoteAKey,
+                               byte[] hash,
+                               boolean genPrevKey);
 }

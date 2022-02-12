@@ -30,4 +30,8 @@ public class DisplayableFingerprint {
     return String.format("%05d", chunk);
   }
 
+  public String getDisplayText() {
+    return fprintNumbers;
+  }
+
 }

@@ -50,38 +50,6 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
    * Generate a scannable and displayable fingerprint.
    *
    * @param version The version of fingerprint you are generating.
-   * @param localStableIdentifier The client's "stable" identifier.
-   * @param localIdentityKey The client's identity key.
-   * @param remoteStableIdentifier The remote party's "stable" identifier.
-   * @param remoteIdentityKey The remote party's identity key.
-   * @return A unique fingerprint for this conversation.
-   */
-  @Override
-  public Fingerprint createFor(int version,
-                               byte[] localStableIdentifier,
-                               final IdentityKey localIdentityKey,
-                               byte[] remoteStableIdentifier,
-                               final IdentityKey remoteIdentityKey)
-  {
-    return createFor(version,
-                     localStableIdentifier,
-                     new LinkedList<IdentityKey>() {{
-                       add(localIdentityKey);
-                     }},
-                     remoteStableIdentifier,
-                     new LinkedList<IdentityKey>() {{
-                       add(remoteIdentityKey);
-                     }});
-  }
-
-  /**
-   * Generate a scannable and displayable fingerprint for logical identities that have multiple
-   * physical keys.
-   *
-   * Do not trust the output of this unless you've been through the device consistency process
-   * for the provided localIdentityKeys.
-   *
-   * @param version The version of fingerprint you are generating.
    * @param aKey Generated authentication keys from session state
    * @param hash Chaining hash from session state
    * @param genPrevKey When true, use (i-1)th key, otherwise use ith key
@@ -89,6 +57,7 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
    */
   public Fingerprint createFor(int version,
                                AuthKey aKey,
+                               AuthKey bKey,
                                byte[] hash,
                                boolean genPrevKey)
   {
@@ -107,13 +76,13 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
       MessageDigest digest    = MessageDigest.getInstance("SHA-512");
       byte[] key = genPrevKey ? aKey.getLastKeyBytes() : aKey.getKeyBytes();
 
+      byte[] data = ByteUtil.combine(hash, key);
+
       for (int i=0;i<iterations;i++) {
-        digest.update(hash);
-        hash = digest.digest(key);
+        digest.update(data);
+        hash = digest.digest(data);
       }
 
-      // temp - calculate MAC over the hash instead of just returning it
-      // TODO update with correct MODUSA fingerprinting
       Mac mac = Mac.getInstance("HmacSHA256");
       mac.init(new SecretKeySpec(key, "HmacSHA256"));
 
