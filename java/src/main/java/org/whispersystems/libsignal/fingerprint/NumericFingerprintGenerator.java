@@ -6,6 +6,7 @@
 package org.whispersystems.libsignal.fingerprint;
 
 import org.whispersystems.libsignal.IdentityKey;
+import org.whispersystems.libsignal.ratchet.AuthKey;
 import org.whispersystems.libsignal.util.ByteUtil;
 import org.whispersystems.libsignal.util.IdentityKeyComparator;
 
@@ -48,28 +49,34 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
    * Generate a scannable and displayable fingerprint.
    *
    * @param version The version of fingerprint you are generating.
-   * @param localStableIdentifier The client's "stable" identifier.
-   * @param localIdentityKey The client's identity key.
-   * @param remoteStableIdentifier The remote party's "stable" identifier.
-   * @param remoteIdentityKey The remote party's identity key.
+   * @param localAuthKeys The client's authentication key object.
+   * @param remoteAuthKeys The remote party's authentication key object.
+   * @param chainedHash A MoDUSA chaining hash.
+   * @param createForLastEpoch Whether to create the key for the current or last epoch. Creates for (i-1)th epoch if true,
+   *                           otherwise creates for current epoch.
    * @return A unique fingerprint for this conversation.
    */
   @Override
   public Fingerprint createFor(int version,
-                               byte[] localStableIdentifier,
-                               final IdentityKey localIdentityKey,
-                               byte[] remoteStableIdentifier,
-                               final IdentityKey remoteIdentityKey)
+                               final AuthKey localAuthKeys,
+                               final AuthKey remoteAuthKeys,
+                               final byte[] chainedHash,
+                               boolean createForLastEpoch)
   {
-    return createFor(version,
-                     localStableIdentifier,
-                     new LinkedList<IdentityKey>() {{
-                       add(localIdentityKey);
-                     }},
-                     remoteStableIdentifier,
-                     new LinkedList<IdentityKey>() {{
-                       add(remoteIdentityKey);
-                     }});
+    byte[] localAuthKey = createForLastEpoch ? localAuthKeys.getLastKeyBytes() : localAuthKeys.getKeyBytes();
+    byte[] remoteAuthKey = createForLastEpoch ? remoteAuthKeys.getLastKeyBytes() : remoteAuthKeys.getKeyBytes();
+
+    byte[] localFingerprint  = getFingerprint(iterations, localAuthKey, chainedHash);
+    byte[] remoteFingerprint = getFingerprint(iterations, remoteAuthKey, chainedHash);
+
+    DisplayableFingerprint displayableFingerprint = new DisplayableFingerprint(localFingerprint,
+            remoteFingerprint);
+
+    ScannableFingerprint   scannableFingerprint   = new ScannableFingerprint(version,
+            localFingerprint,
+            remoteFingerprint);
+
+    return new Fingerprint(displayableFingerprint, scannableFingerprint);
   }
 
   /**
@@ -80,47 +87,29 @@ public class NumericFingerprintGenerator implements FingerprintGenerator {
    * for the provided localIdentityKeys.
    *
    * @param version The version of fingerprint you are generating.
-   * @param localStableIdentifier The client's "stable" identifier.
-   * @param localIdentityKeys The client's collection of physical identity keys.
-   * @param remoteStableIdentifier The remote party's "stable" identifier.
-   * @param remoteIdentityKeys The remote party's collection of physical identity key.
    * @return A unique fingerprint for this conversation.
    */
   public Fingerprint createFor(int version,
-                               byte[] localStableIdentifier,
-                               List<IdentityKey> localIdentityKeys,
-                               byte[] remoteStableIdentifier,
-                               List<IdentityKey> remoteIdentityKeys)
+                               List<AuthKey> localAuthKeys,
+                               List<AuthKey> remoteAuthKeys,
+                               byte[] chainedHash,
+                               boolean createForLastEpoch)
   {
-    byte[] localFingerprint  = getFingerprint(iterations, localStableIdentifier, localIdentityKeys);
-    byte[] remoteFingerprint = getFingerprint(iterations, remoteStableIdentifier, remoteIdentityKeys);
-
-    DisplayableFingerprint displayableFingerprint = new DisplayableFingerprint(localFingerprint,
-                                                                               remoteFingerprint);
-
-    ScannableFingerprint   scannableFingerprint   = new ScannableFingerprint(version,
-                                                                             localFingerprint,
-                                                                             remoteFingerprint);
-
-    return new Fingerprint(displayableFingerprint, scannableFingerprint);
+    return createFor(version, localAuthKeys.get(localAuthKeys.size()-1), localAuthKeys.get(localAuthKeys.size()-1), chainedHash, createForLastEpoch);
   }
 
-  private byte[] getFingerprint(int iterations, byte[] stableIdentifier, List<IdentityKey> unsortedIdentityKeys) {
+  private byte[] getFingerprint(int iterations, byte[] authKey, byte[] chainedHash) {
     try {
       MessageDigest digest    = MessageDigest.getInstance("SHA-512");
-      byte[]        publicKey = getLogicalKeyBytes(unsortedIdentityKeys);
-      byte[]        hash      = ByteUtil.combine(ByteUtil.shortToByteArray(FINGERPRINT_VERSION),
-                                                 publicKey, stableIdentifier);
+      byte[]        hash      = ByteUtil.combine(authKey, chainedHash, ByteUtil.shortToByteArray(FINGERPRINT_VERSION));
 
       for (int i=0;i<iterations;i++) {
         digest.update(hash);
-        hash = digest.digest(publicKey);
+        hash = digest.digest(authKey);
       }
 
-      // temp - calculate MAC over the hash instead of just returning it
-      // TODO update with correct MODUSA fingerprinting
       Mac mac = Mac.getInstance("HmacSHA256");
-      mac.init(new SecretKeySpec(publicKey, "HmacSHA256"));
+      mac.init(new SecretKeySpec(authKey, "HmacSHA256"));
 
       return mac.doFinal(hash);
 
