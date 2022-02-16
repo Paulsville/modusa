@@ -2,34 +2,43 @@ package org.whispersystems.libsignal.fingerprint;
 
 import junit.framework.TestCase;
 
-import org.whispersystems.libsignal.IdentityKey;
 import org.whispersystems.libsignal.ecc.Curve;
 import org.whispersystems.libsignal.ecc.ECKeyPair;
+import org.whispersystems.libsignal.ratchet.AuthKey;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class NumericFingerprintGeneratorTest extends TestCase {
 
   private static final int    VERSION                     = 1;
   private static final byte[] ALICE_IDENTITY              = {(byte) 0x05, (byte) 0x06, (byte) 0x86, (byte) 0x3b, (byte) 0xc6, (byte) 0x6d, (byte) 0x02, (byte) 0xb4, (byte) 0x0d, (byte) 0x27, (byte) 0xb8, (byte) 0xd4, (byte) 0x9c, (byte) 0xa7, (byte) 0xc0, (byte) 0x9e, (byte) 0x92, (byte) 0x39, (byte) 0x23, (byte) 0x6f, (byte) 0x9d, (byte) 0x7d, (byte) 0x25, (byte) 0xd6, (byte) 0xfc, (byte) 0xca, (byte) 0x5c, (byte) 0xe1, (byte) 0x3c, (byte) 0x70, (byte) 0x64, (byte) 0xd8, (byte) 0x68};
+  private static final byte[] ALICE_LAST_IDENTITY         = {};
   private static final byte[] BOB_IDENTITY                = {(byte) 0x05, (byte) 0xf7, (byte) 0x81, (byte) 0xb6, (byte) 0xfb, (byte) 0x32, (byte) 0xfe, (byte) 0xd9, (byte) 0xba, (byte) 0x1c, (byte) 0xf2, (byte) 0xde, (byte) 0x97, (byte) 0x8d, (byte) 0x4d, (byte) 0x5d, (byte) 0xa2, (byte) 0x8d, (byte) 0xc3, (byte) 0x40, (byte) 0x46, (byte) 0xae, (byte) 0x81, (byte) 0x44, (byte) 0x02, (byte) 0xb5, (byte) 0xc0, (byte) 0xdb, (byte) 0xd9, (byte) 0x6f, (byte) 0xda, (byte) 0x90, (byte) 0x7b};
-  private static final String DISPLAYABLE_FINGERPRINT     = "180899156847005635174159136008967055103750192308229563215506";
-//  private static final byte[] ALICE_SCANNABLE_FINGERPRINT = new byte[]{(byte)0x08, (byte)0x01, (byte)0x12, (byte)0x22, (byte)0x0a, (byte)0x20, (byte)0x1e, (byte)0x30, (byte)0x1a, (byte)0x03, (byte)0x53, (byte)0xdc, (byte)0xe3, (byte)0xdb, (byte)0xe7, (byte)0x68, (byte)0x4c, (byte)0xb8, (byte)0x33, (byte)0x6e, (byte)0x85, (byte)0x13, (byte)0x6c, (byte)0xdc, (byte)0x0e, (byte)0xe9, (byte)0x62, (byte)0x19, (byte)0x49, (byte)0x4a, (byte)0xda, (byte)0x30, (byte)0x5d, (byte)0x62, (byte)0xa7, (byte)0xbd, (byte)0x61, (byte)0xdf, (byte)0x1a, (byte)0x22, (byte)0x0a, (byte)0x20, (byte)0xd6, (byte)0x2c, (byte)0xbf, (byte)0x73, (byte)0xa1, (byte)0x15, (byte)0x92, (byte)0x01, (byte)0x5b, (byte)0x6b, (byte)0x9f, (byte)0x16, (byte)0x82, (byte)0xac, (byte)0x30, (byte)0x6f, (byte)0xea, (byte)0x3a, (byte)0xaf, (byte)0x38, (byte)0x85, (byte)0xb8, (byte)0x4d, (byte)0x12, (byte)0xbc, (byte)0xa6, (byte)0x31, (byte)0xe9, (byte)0xd4, (byte)0xfb, (byte)0x3a, (byte)0x4d};
-  private static final byte[] ALICE_SCANNABLE_FINGERPRINT = new byte[] {8, 1, 18, 34, 10, 32, 61, 105, 36, -77, -23, 22, -82, 31, -85, 80, 108, -71, -26, 81, 61, 119, -96, -66, -66, -3, 19, 119, -34, 98, -73, 95, 124, 5, -99, -24, -106, -31, 26, 34, 10, 32, 102, 42, 18, 38, 65, -111, 120, 35, -126, -99, -81, 116, 30, -60, 80, -64, -94, 61, 12, -26, -70, -112, -36, -94, 80, -86, 100, -66, 6, -46, 104, 86};
-  private static final byte[] BOB_SCANNABLE_FINGERPRINT = new byte[] {8, 1, 18, 34, 10, 32, 102, 42, 18, 38, 65, -111, 120, 35, -126, -99, -81, 116, 30, -60, 80, -64, -94, 61, 12, -26, -70, -112, -36, -94, 80, -86, 100, -66, 6, -46, 104, 86, 26, 34, 10, 32, 61, 105, 36, -77, -23, 22, -82, 31, -85, 80, 108, -71, -26, 81, 61, 119, -96, -66, -66, -3, 19, 119, -34, 98, -73, 95, 124, 5, -99, -24, -106, -31};
+  private static final byte[] BOB_LAST_IDENTITY           = {};
+  private static final byte[] CHAINED_HASH = "0f588be3d1c4e72fd4f65d2b451ccecf9ab3704c58846283b04dba930b111763".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] MISMATCHED_HASH = "bcb154d7c9ed6b96483b92fdfea1d587a8f4f3fadff89ccf2b0ab8135d9b5fc3".getBytes(StandardCharsets.UTF_8);
+  private static final String DISPLAYABLE_FINGERPRINT     = "730872997323792922639733228841921866086491721601358927692439";
+  private static final byte[] ALICE_SCANNABLE_FINGERPRINT = new byte[] {8, 1, 18, 34, 10, 32, -53, 62, 114, -48, -1, -54, -30, 25, -73, 117, 86, 84, 20, -102, 48, 4, 91, -40, -98, -57, -9, -77, -21, -51, 116, -21, -77, -77, -16, -23, -90, 97, 26, 34, 10, 32, 8, 107, -12, 3, -102, 41, 13, 85, 106, -32, 0, 50, 104, 59, 73, 43, 24, 53, -101, -121, 118, -64, -73, 116, 92, -69, -29, -49, 55, 23, 98, 101};
+  private static final byte[] BOB_SCANNABLE_FINGERPRINT = new byte[] {8, 1, 18, 34, 10, 32, 8, 107, -12, 3, -102, 41, 13, 85, 106, -32, 0, 50, 104, 59, 73, 43, 24, 53, -101, -121, 118, -64, -73, 116, 92, -69, -29, -49, 55, 23, 98, 101, 26, 34, 10, 32, -53, 62, 114, -48, -1, -54, -30, 25, -73, 117, 86, 84, 20, -102, 48, 4, 91, -40, -98, -57, -9, -77, -21, -51, 116, -21, -77, -77, -16, -23, -90, 97};
 
   public void testVectors() throws Exception {
-    IdentityKey aliceIdentityKey = new IdentityKey(ALICE_IDENTITY, 0);
-    IdentityKey bobIdentityKey   = new IdentityKey(BOB_IDENTITY, 0);
+
+    AuthKey aliceAuthKey = new AuthKey(ALICE_IDENTITY, ALICE_LAST_IDENTITY, 0);
+    AuthKey bobAuthKey = new AuthKey(BOB_IDENTITY, BOB_LAST_IDENTITY, 0);
 
     NumericFingerprintGenerator generator        = new NumericFingerprintGenerator(5200);
     Fingerprint                 aliceFingerprint = generator.createFor(VERSION,
-                                                                       "+14152222222".getBytes(), aliceIdentityKey,
-                                                                       "+14153333333".getBytes(), bobIdentityKey);
+                                                                       aliceAuthKey,
+                                                                       bobAuthKey,
+                                                                       CHAINED_HASH,
+                                                                       false);
 
     Fingerprint                 bobFingerprint = generator.createFor(VERSION,
-                                                                       "+14153333333".getBytes(), bobIdentityKey,
-                                                                       "+14152222222".getBytes(), aliceIdentityKey);
+                                                                       bobAuthKey,
+                                                                       aliceAuthKey,
+                                                                       CHAINED_HASH,
+                                                        false);
 
     assertEquals(aliceFingerprint.getDisplayableFingerprint().getDisplayText(), DISPLAYABLE_FINGERPRINT);
     assertEquals(bobFingerprint.getDisplayableFingerprint().getDisplayText(), DISPLAYABLE_FINGERPRINT);
@@ -40,19 +49,25 @@ public class NumericFingerprintGeneratorTest extends TestCase {
 
   public void testMatchingFingerprints() throws FingerprintVersionMismatchException, FingerprintIdentifierMismatchException, FingerprintParsingException {
     ECKeyPair aliceKeyPair = Curve.generateKeyPair();
+    ECKeyPair aliceLastKeyPair = Curve.generateKeyPair();
     ECKeyPair bobKeyPair   = Curve.generateKeyPair();
+    ECKeyPair bobLastKeyPair = Curve.generateKeyPair();
 
-    IdentityKey aliceIdentityKey = new IdentityKey(aliceKeyPair.getPublicKey());
-    IdentityKey bobIdentityKey   = new IdentityKey(bobKeyPair.getPublicKey());
+    AuthKey aliceAuthKey = new AuthKey(aliceKeyPair.getPublicKey().serialize(), aliceLastKeyPair.getPublicKey().serialize(), 0);
+    AuthKey bobAuthKey = new AuthKey(bobKeyPair.getPublicKey().serialize(), bobLastKeyPair.getPublicKey().serialize(), 0);
 
     NumericFingerprintGenerator generator        = new NumericFingerprintGenerator(1024);
     Fingerprint                 aliceFingerprint = generator.createFor(VERSION,
-                                                                       "+14152222222".getBytes(), aliceIdentityKey,
-                                                                       "+14153333333".getBytes(), bobIdentityKey);
+                                                                       aliceAuthKey,
+                                                                       bobAuthKey,
+                                                                       CHAINED_HASH,
+                                                        false);
 
-    Fingerprint bobFingerprint = generator.createFor(VERSION,
-                                                     "+14153333333".getBytes(), bobIdentityKey,
-                                                     "+14152222222".getBytes(), aliceIdentityKey);
+    Fingerprint                 bobFingerprint = generator.createFor(VERSION,
+                                                                       bobAuthKey,
+                                                                       aliceAuthKey,
+                                                                       CHAINED_HASH,
+                                                        false);
 
     assertEquals(aliceFingerprint.getDisplayableFingerprint().getDisplayText(),
                  bobFingerprint.getDisplayableFingerprint().getDisplayText());
@@ -65,21 +80,28 @@ public class NumericFingerprintGeneratorTest extends TestCase {
 
   public void testMismatchingFingerprints() throws FingerprintVersionMismatchException, FingerprintIdentifierMismatchException, FingerprintParsingException {
     ECKeyPair aliceKeyPair = Curve.generateKeyPair();
+    ECKeyPair aliceLastKeyPair = Curve.generateKeyPair();
     ECKeyPair bobKeyPair   = Curve.generateKeyPair();
+    ECKeyPair bobLastKeyPair   = Curve.generateKeyPair();
     ECKeyPair mitmKeyPair  = Curve.generateKeyPair();
+    ECKeyPair mitmLastKeyPair  = Curve.generateKeyPair();
 
-    IdentityKey aliceIdentityKey = new IdentityKey(aliceKeyPair.getPublicKey());
-    IdentityKey bobIdentityKey   = new IdentityKey(bobKeyPair.getPublicKey());
-    IdentityKey mitmIdentityKey  = new IdentityKey(mitmKeyPair.getPublicKey());
+    AuthKey aliceAuthKey = new AuthKey(aliceKeyPair.getPublicKey().serialize(), aliceLastKeyPair.getPublicKey().serialize(), 0);
+    AuthKey bobAuthKey = new AuthKey(bobKeyPair.getPublicKey().serialize(), bobLastKeyPair.getPublicKey().serialize(), 0);
+    AuthKey mitmAuthKey = new AuthKey(mitmKeyPair.getPublicKey().serialize(), mitmLastKeyPair.getPublicKey().serialize(), 0);
 
     NumericFingerprintGenerator generator        = new NumericFingerprintGenerator(1024);
     Fingerprint                 aliceFingerprint = generator.createFor(VERSION,
-                                                                       "+14152222222".getBytes(), aliceIdentityKey,
-                                                                       "+14153333333".getBytes(), mitmIdentityKey);
+                                                                       aliceAuthKey,
+                                                                       mitmAuthKey,
+            CHAINED_HASH,
+                                                        false);
 
-    Fingerprint bobFingerprint = generator.createFor(VERSION,
-                                                     "+14153333333".getBytes(), bobIdentityKey,
-                                                     "+14152222222".getBytes(), aliceIdentityKey);
+    Fingerprint                 bobFingerprint = generator.createFor(VERSION,
+                                                                     bobAuthKey,
+                                                                     aliceAuthKey,
+            CHAINED_HASH,
+                                                      false);
 
     assertNotSame(aliceFingerprint.getDisplayableFingerprint().getDisplayText(),
                   bobFingerprint.getDisplayableFingerprint().getDisplayText());
@@ -90,19 +112,25 @@ public class NumericFingerprintGeneratorTest extends TestCase {
 
   public void testMismatchingIdentifiers() throws FingerprintVersionMismatchException, FingerprintParsingException {
     ECKeyPair aliceKeyPair = Curve.generateKeyPair();
+    ECKeyPair aliceLastKeyPair = Curve.generateKeyPair();
     ECKeyPair bobKeyPair   = Curve.generateKeyPair();
+    ECKeyPair bobLastKeyPair   = Curve.generateKeyPair();
 
-    IdentityKey aliceIdentityKey = new IdentityKey(aliceKeyPair.getPublicKey());
-    IdentityKey bobIdentityKey   = new IdentityKey(bobKeyPair.getPublicKey());
+    AuthKey aliceAuthKey = new AuthKey(aliceKeyPair.getPublicKey().serialize(), aliceLastKeyPair.getPublicKey().serialize(), 0);
+    AuthKey bobAuthKey = new AuthKey(bobKeyPair.getPublicKey().serialize(), bobLastKeyPair.getPublicKey().serialize(), 0);
 
     NumericFingerprintGenerator generator        = new NumericFingerprintGenerator(1024);
     Fingerprint                 aliceFingerprint = generator.createFor(VERSION,
-                                                                       "+141512222222".getBytes(), aliceIdentityKey,
-                                                                       "+14153333333".getBytes(), bobIdentityKey);
+                                                                       aliceAuthKey,
+                                                                       bobAuthKey,
+                                                                       CHAINED_HASH,
+                                                        false);
 
-    Fingerprint bobFingerprint = generator.createFor(VERSION,
-                                                     "+14153333333".getBytes(), bobIdentityKey,
-                                                     "+14152222222".getBytes(), aliceIdentityKey);
+    Fingerprint                 bobFingerprint = generator.createFor(VERSION,
+                                                                     bobAuthKey,
+                                                                     aliceAuthKey,
+                                                                     MISMATCHED_HASH,
+                                                      false);
 
     assertNotSame(aliceFingerprint.getDisplayableFingerprint().getDisplayText(),
                   bobFingerprint.getDisplayableFingerprint().getDisplayText());
