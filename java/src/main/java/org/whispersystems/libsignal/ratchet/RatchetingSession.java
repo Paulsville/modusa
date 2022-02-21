@@ -19,6 +19,8 @@ import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Arrays;
 
@@ -117,6 +119,10 @@ public class RatchetingSession {
 
       sessionState.setSenderChain(parameters.getOurRatchetKey(), derivedKeys.getChainKey());
       sessionState.setRootKey(derivedKeys.getRootKey());
+
+      sessionState.setFprintHash(deriveNewHash(derivedKeys.authKey.getKeyBytes(), sessionState.getFprintHash()));
+
+
     } catch (IOException e) {
       throw new AssertionError(e);
     }
@@ -141,6 +147,19 @@ public class RatchetingSession {
     return new DerivedKeys(new RootKey(kdf, derivedSecrets[0]),
                            new ChainKey(kdf, derivedSecrets[1], 0),
                            new AuthKey(derivedSecrets[2], lastAuthKey, 0));
+  }
+
+  private static byte[] deriveNewHash(byte[] newAuthKey, byte[] oldHash) throws InvalidKeyException {
+    byte[] newHashRaw = Arrays.copyOf(oldHash, oldHash.length + newAuthKey.length);
+    System.arraycopy(newAuthKey, 0, newHashRaw, oldHash.length, newAuthKey.length);
+
+    MessageDigest digest = null;
+    try {
+      digest = MessageDigest.getInstance("SHA-256");
+    } catch (NoSuchAlgorithmException e) {
+      throw new InvalidKeyException();
+    }
+    return digest.digest(newHashRaw);
   }
 
   private static boolean isAlice(ECPublicKey ourKey, ECPublicKey theirKey) {
