@@ -5,11 +5,9 @@ option java_outer_classname = "FingerprintProtos";
 
 message LogicalFingerprint {
   optional bytes content = 1;
-//  optional bytes identifier = 2;
 }
 
 message CombinedFingerprints {
   optional uint32             version           = 1;
-  optional LogicalFingerprint localFingerprint  = 2;
-  optional LogicalFingerprint remoteFingerprint = 3;
+  optional LogicalFingerprint fingerprint  = 2;
 }

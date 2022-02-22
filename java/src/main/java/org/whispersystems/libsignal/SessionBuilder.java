@@ -109,6 +109,7 @@ public class SessionBuilder {
       throw new UntrustedIdentityException(remoteAddress.getName(), theirIdentityKey);
     }
 
+    message.se
     Optional<Integer> unsignedPreKeyId = processV3(sessionRecord, message);
 
     identityKeyStore.saveIdentity(remoteAddress, theirIdentityKey);
@@ -174,6 +175,13 @@ public class SessionBuilder {
     } else {
       return Optional.absent();
     }
+  }
+
+  private byte[] genInitialHash(PreKeyBundle pkb, IdentityKey idpkA, IdentityKey idpkB, byte[] otpk) throws NoSuchAlgorithmException {
+    byte[] concat = ByteUtil.combine(pkb.getSignedPreKeySignature(), idpkA.getPublicKey().serialize(), idpkB.getPublicKey().serialize(), otpk);
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
+    digest.update(concat);
+    return digest.digest();
   }
 
   /**
