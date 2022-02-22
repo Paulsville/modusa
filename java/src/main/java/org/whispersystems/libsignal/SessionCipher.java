@@ -145,7 +145,7 @@ public class SessionCipher {
    */
   public byte[] decrypt(PreKeySignalMessage ciphertext)
       throws DuplicateMessageException, LegacyMessageException, InvalidMessageException,
-             InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException
+             InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException
   {
     return decrypt(ciphertext, new NullDecryptionCallback());
   }
@@ -173,7 +173,7 @@ public class SessionCipher {
    */
   public byte[] decrypt(PreKeySignalMessage ciphertext, DecryptionCallback callback)
       throws DuplicateMessageException, LegacyMessageException, InvalidMessageException,
-             InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException
+             InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException
   {
     synchronized (SESSION_LOCK) {
       SessionRecord     sessionRecord    = sessionStore.loadSession(remoteAddress);

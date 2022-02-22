@@ -9,5 +9,6 @@ message LogicalFingerprint {
 
 message CombinedFingerprints {
   optional uint32             version           = 1;
-  optional LogicalFingerprint fingerprint  = 2;
+  optional LogicalFingerprint localFingerprint  = 2;
+  optional LogicalFingerprint remoteFingerprint = 3;
 }

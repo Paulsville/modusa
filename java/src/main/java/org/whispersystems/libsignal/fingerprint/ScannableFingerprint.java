@@ -18,16 +18,21 @@ public class ScannableFingerprint {
   private final int                  version;
   private final CombinedFingerprints fingerprints;
 
-  ScannableFingerprint(int version, byte[] fingerprintData)
+  ScannableFingerprint(int version, byte[] localFingerprintData, byte[] remoteFingerprintData)
   {
-    LogicalFingerprint fprint = LogicalFingerprint.newBuilder()
-                                                            .setContent(ByteString.copyFrom(ByteUtil.trim(fingerprintData, 32)))
-                                                            .build();
+    LogicalFingerprint localFingerprint = LogicalFingerprint.newBuilder()
+            .setContent(ByteString.copyFrom(ByteUtil.trim(localFingerprintData, 32)))
+            .build();
+
+    LogicalFingerprint remoteFingerprint = LogicalFingerprint.newBuilder()
+            .setContent(ByteString.copyFrom(ByteUtil.trim(remoteFingerprintData, 32)))
+            .build();
 
     this.version      = version;
     this.fingerprints = CombinedFingerprints.newBuilder()
                                             .setVersion(version)
-                                            .setFingerprint(fprint)
+                                            .setLocalFingerprint(localFingerprint)
+                                            .setRemoteFingerprint(remoteFingerprint)
                                             .build();
   }
 

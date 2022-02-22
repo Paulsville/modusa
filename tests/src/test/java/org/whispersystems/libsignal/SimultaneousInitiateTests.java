@@ -13,7 +13,6 @@ import org.whispersystems.libsignal.state.PreKeyRecord;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 import org.whispersystems.libsignal.util.Medium;
 
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -31,7 +30,7 @@ public class SimultaneousInitiateTests extends TestCase {
   public void testBasicSimultaneousInitiate()
       throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException,
       InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-      InvalidKeyIdException, NoSessionException, NoSuchAlgorithmException
+      InvalidKeyIdException, NoSessionException
   {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();
     SignalProtocolStore bobStore   = new TestInMemorySignalProtocolStore();
@@ -86,7 +85,7 @@ public class SimultaneousInitiateTests extends TestCase {
     assertTrue(isSessionIdEqual(aliceStore, bobStore));
   }
 
-  public void testLostSimultaneousInitiate() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, DuplicateMessageException, LegacyMessageException, InvalidKeyIdException, NoSessionException, NoSuchAlgorithmException {
+  public void testLostSimultaneousInitiate() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, DuplicateMessageException, LegacyMessageException, InvalidKeyIdException, NoSessionException {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();
     SignalProtocolStore bobStore   = new TestInMemorySignalProtocolStore();
 
@@ -137,7 +136,7 @@ public class SimultaneousInitiateTests extends TestCase {
   public void testSimultaneousInitiateLostMessage()
       throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException,
       InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-      InvalidKeyIdException, NoSessionException, NoSuchAlgorithmException
+      InvalidKeyIdException, NoSessionException
   {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();
     SignalProtocolStore bobStore   = new TestInMemorySignalProtocolStore();
@@ -196,7 +195,7 @@ public class SimultaneousInitiateTests extends TestCase {
   public void testSimultaneousInitiateRepeatedMessages()
       throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException,
       InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-      InvalidKeyIdException, NoSessionException, NoSuchAlgorithmException
+      InvalidKeyIdException, NoSessionException
   {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();
     SignalProtocolStore bobStore   = new TestInMemorySignalProtocolStore();
@@ -272,7 +271,7 @@ public class SimultaneousInitiateTests extends TestCase {
   public void testRepeatedSimultaneousInitiateRepeatedMessages()
       throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException,
       InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-      InvalidKeyIdException, NoSessionException, NoSuchAlgorithmException
+      InvalidKeyIdException, NoSessionException
   {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();
     SignalProtocolStore bobStore   = new TestInMemorySignalProtocolStore();
@@ -351,7 +350,7 @@ public class SimultaneousInitiateTests extends TestCase {
   public void testRepeatedSimultaneousInitiateLostMessageRepeatedMessages()
       throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException,
       InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-      InvalidKeyIdException, NoSessionException, NoSuchAlgorithmException
+      InvalidKeyIdException, NoSessionException
   {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();
     SignalProtocolStore bobStore   = new TestInMemorySignalProtocolStore();

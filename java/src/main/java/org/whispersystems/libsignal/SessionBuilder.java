@@ -100,32 +100,23 @@ public class SessionBuilder {
    * @throws org.whispersystems.libsignal.UntrustedIdentityException when the {@link IdentityKey} of the sender is untrusted.
    */
   /*package*/ Optional<Integer> process(SessionRecord sessionRecord, PreKeySignalMessage message)
-      throws InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException
+      throws InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException
   {
     IdentityKey theirIdentityKey = message.getIdentityKey();
-
 
     if (!identityKeyStore.isTrustedIdentity(remoteAddress, theirIdentityKey, IdentityKeyStore.Direction.RECEIVING)) {
       throw new UntrustedIdentityException(remoteAddress.getName(), theirIdentityKey);
     }
 
-    message.se
     Optional<Integer> unsignedPreKeyId = processV3(sessionRecord, message);
 
     identityKeyStore.saveIdentity(remoteAddress, theirIdentityKey);
 
-    byte[] initialHash = genInitialHash(,
-            preKeyStore.loadPreKey(message.getPreKeyId().get()).getKeyPair().getPublicKey().serialize(),
-            sessionRecord.getSessionState().getLocalIdentityKey().serialize(),
-            theirIdentityKey.serialize());
-
-    sessionRecord.getSessionState().setLastFprintHash(initialHash);
-    sessionRecord.getSessionState().setFprintHash(advanceHash(initialHash, sessionRecord.getSessionState().getAliceBaseKey()));
     return unsignedPreKeyId;
   }
 
   private Optional<Integer> processV3(SessionRecord sessionRecord, PreKeySignalMessage message)
-      throws UntrustedIdentityException, InvalidKeyIdException, InvalidKeyException, NoSuchAlgorithmException
+      throws UntrustedIdentityException, InvalidKeyIdException, InvalidKeyException
   {
 
     if (sessionRecord.hasSessionState(message.getMessageVersion(), message.getBaseKey().serialize())) {
@@ -133,42 +124,29 @@ public class SessionBuilder {
       return Optional.absent();
     }
 
-    ECKeyPair ourOneTimePreKey = preKeyStore.loadPreKey(message.getPreKeyId().get()).getKeyPair();
     ECKeyPair ourSignedPreKey = signedPreKeyStore.loadSignedPreKey(message.getSignedPreKeyId()).getKeyPair();
-    IdentityKeyPair ourIdentityKey = identityKeyStore.getIdentityKeyPair();
 
     BobSignalProtocolParameters.Builder parameters = BobSignalProtocolParameters.newBuilder();
 
     parameters.setTheirBaseKey(message.getBaseKey())
               .setTheirIdentityKey(message.getIdentityKey())
-              .setOurIdentityKey(ourIdentityKey)
+              .setOurIdentityKey(identityKeyStore.getIdentityKeyPair())
               .setOurSignedPreKey(ourSignedPreKey)
               .setOurRatchetKey(ourSignedPreKey);
 
     if (message.getPreKeyId().isPresent()) {
-      parameters.setOurOneTimePreKey(Optional.of(ourOneTimePreKey));
+      parameters.setOurOneTimePreKey(Optional.of(preKeyStore.loadPreKey(message.getPreKeyId().get()).getKeyPair()));
     } else {
       parameters.setOurOneTimePreKey(Optional.<ECKeyPair>absent());
     }
-    if (!sessionRecord.isFresh()) sessionRecord.archiveCurrentState();
 
-    byte[] initialHash = genInitialHash(,
-            ourOneTimePreKey.getPublicKey().serialize(),
-            message.getIdentityKey().serialize(), //alice's key
-            ourIdentityKey.serialize()); //bob's key
+    if (!sessionRecord.isFresh()) sessionRecord.archiveCurrentState();
 
     RatchetingSession.initializeSession(sessionRecord.getSessionState(), parameters.create());
 
     sessionRecord.getSessionState().setLocalRegistrationId(identityKeyStore.getLocalRegistrationId());
     sessionRecord.getSessionState().setRemoteRegistrationId(message.getRegistrationId());
     sessionRecord.getSessionState().setAliceBaseKey(message.getBaseKey().serialize());
-
-    byte[] hash1 = advanceHash(initialHash, message.getBaseKey().serialize());
-    byte[] hash2 = advanceHash(hash1, ourSignedPreKey.getPublicKey().serialize());
-
-    sessionRecord.getSessionState().setLastFprintHash(hash1);
-    sessionRecord.getSessionState().setFprintHash(hash2);
-
 
     if (message.getPreKeyId().isPresent()) {
       return message.getPreKeyId();
@@ -241,20 +219,6 @@ public class SessionBuilder {
       identityKeyStore.saveIdentity(remoteAddress, preKey.getIdentityKey());
       sessionStore.storeSession(remoteAddress, sessionRecord);
     }
-  }
-
-  public byte[] genInitialHash(byte[] pkb, byte[] otpk, byte[] idpkA, byte[] idpkB) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    byte[] combined = ByteUtil.combine(pkb, otpk, idpkA, idpkB);
-
-    return digest.digest(combined);
-  }
-
-  public byte[] advanceHash(byte[] hash, byte[] rcpk) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    byte[] combined = ByteUtil.combine(hash, rcpk);
-
-    return digest.digest(combined);
   }
 
 }
