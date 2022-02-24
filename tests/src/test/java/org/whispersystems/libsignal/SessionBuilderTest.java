@@ -14,6 +14,7 @@ import org.whispersystems.libsignal.state.SignalProtocolStore;
 import org.whispersystems.libsignal.state.SignedPreKeyRecord;
 import org.whispersystems.libsignal.util.Pair;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ public class SessionBuilderTest extends TestCase {
   private static final SignalProtocolAddress BOB_ADDRESS   = new SignalProtocolAddress("+14152222222", 1);
 
   public void testBasicPreKeyV2()
-      throws InvalidKeyException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, UntrustedIdentityException, NoSessionException {
+      throws InvalidKeyException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, UntrustedIdentityException, NoSessionException, NoSuchAlgorithmException {
     SignalProtocolStore aliceStore          = new TestInMemorySignalProtocolStore();
     SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, BOB_ADDRESS);
 
@@ -44,7 +45,7 @@ public class SessionBuilderTest extends TestCase {
   }
 
   public void testBasicPreKeyV3()
-      throws InvalidKeyException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, UntrustedIdentityException, NoSessionException {
+      throws InvalidKeyException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, UntrustedIdentityException, NoSessionException, NoSuchAlgorithmException {
     SignalProtocolStore aliceStore          = new TestInMemorySignalProtocolStore();
     SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, BOB_ADDRESS);
 
@@ -138,7 +139,7 @@ public class SessionBuilderTest extends TestCase {
     }
   }
 
-  public void testBadSignedPreKeySignature() throws InvalidKeyException, UntrustedIdentityException {
+  public void testBadSignedPreKeySignature() throws InvalidKeyException, InvalidKeyIdException, UntrustedIdentityException, NoSuchAlgorithmException {
     SignalProtocolStore aliceStore          = new TestInMemorySignalProtocolStore();
     SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, BOB_ADDRESS);
 
@@ -177,7 +178,7 @@ public class SessionBuilderTest extends TestCase {
     aliceSessionBuilder.process(bobPreKey);
   }
 
-  public void testRepeatBundleMessageV2() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, NoSessionException {
+  public void testRepeatBundleMessageV2() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, NoSessionException, NoSuchAlgorithmException {
     SignalProtocolStore aliceStore          = new TestInMemorySignalProtocolStore();
     SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, BOB_ADDRESS);
 
@@ -205,7 +206,7 @@ public class SessionBuilderTest extends TestCase {
     }
   }
 
-  public void testRepeatBundleMessageV3() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, NoSessionException {
+  public void testRepeatBundleMessageV3() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, InvalidKeyIdException, DuplicateMessageException, LegacyMessageException, NoSessionException, NoSuchAlgorithmException {
     SignalProtocolStore aliceStore          = new TestInMemorySignalProtocolStore();
     SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, BOB_ADDRESS);
 
@@ -259,7 +260,7 @@ public class SessionBuilderTest extends TestCase {
 
   }
 
-  public void testBadMessageBundle() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, DuplicateMessageException, LegacyMessageException, InvalidKeyIdException {
+  public void testBadMessageBundle() throws InvalidKeyException, UntrustedIdentityException, InvalidVersionException, InvalidMessageException, DuplicateMessageException, LegacyMessageException, InvalidKeyIdException, NoSuchAlgorithmException {
     SignalProtocolStore aliceStore          = new TestInMemorySignalProtocolStore();
     SessionBuilder aliceSessionBuilder = new SessionBuilder(aliceStore, BOB_ADDRESS);
 

@@ -140,7 +140,7 @@ public class SessionCipherTest extends TestCase {
   }
 
   private void initializeSessionsV3(SessionState aliceSessionState, SessionState bobSessionState)
-      throws InvalidKeyException
+      throws InvalidKeyException, NoSuchAlgorithmException
   {
     ECKeyPair       aliceIdentityKeyPair = Curve.generateKeyPair();
     IdentityKeyPair aliceIdentityKey     = new IdentityKeyPair(new IdentityKey(aliceIdentityKeyPair.getPublicKey()),

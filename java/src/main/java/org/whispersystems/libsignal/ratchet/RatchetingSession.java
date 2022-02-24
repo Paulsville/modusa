@@ -27,7 +27,7 @@ import java.util.Arrays;
 public class RatchetingSession {
 
   public static void initializeSession(SessionState sessionState, SymmetricSignalProtocolParameters parameters)
-      throws InvalidKeyException
+      throws InvalidKeyException, NoSuchAlgorithmException
   {
     if (isAlice(parameters.getOurBaseKey().getPublicKey(), parameters.getTheirBaseKey())) {
       AliceSignalProtocolParameters.Builder aliceParameters = AliceSignalProtocolParameters.newBuilder();
@@ -55,7 +55,7 @@ public class RatchetingSession {
   }
 
   public static void initializeSession(SessionState sessionState, AliceSignalProtocolParameters parameters)
-      throws InvalidKeyException
+      throws InvalidKeyException, NoSuchAlgorithmException
   {
     try {
       sessionState.setSessionVersion(CiphertextMessage.CURRENT_VERSION);
@@ -85,13 +85,18 @@ public class RatchetingSession {
       sessionState.addReceiverChain(parameters.getTheirRatchetKey(), derivedKeys.getChainKey());
       sessionState.setSenderChain(sendingRatchetKey, sendingChain.second());
       sessionState.setRootKey(sendingChain.first());
+
+      sessionState.setAuthKey(derivedKeys.getAuthKey());
+      sessionState.setLastFprintHash(sessionState.getFprintHash());
+      sessionState.setFprintHash(advanceHash(sessionState.getFprintHash(), derivedKeys.getRootKey().getKeyBytes()));
+
     } catch (IOException e) {
       throw new AssertionError(e);
     }
   }
 
   public static void initializeSession(SessionState sessionState, BobSignalProtocolParameters parameters)
-      throws InvalidKeyException
+      throws InvalidKeyException, NoSuchAlgorithmException
   {
 
     try {
@@ -119,9 +124,10 @@ public class RatchetingSession {
 
       sessionState.setSenderChain(parameters.getOurRatchetKey(), derivedKeys.getChainKey());
       sessionState.setRootKey(derivedKeys.getRootKey());
+      sessionState.setAuthKey(derivedKeys.getAuthKey());
 
-      sessionState.setFprintHash(deriveNewHash(derivedKeys.authKey.getKeyBytes(), sessionState.getFprintHash()));
-
+      sessionState.setLastFprintHash(sessionState.getFprintHash());
+      sessionState.setFprintHash(advanceHash(sessionState.getFprintHash(), derivedKeys.getRootKey().getKeyBytes()));
 
     } catch (IOException e) {
       throw new AssertionError(e);
@@ -149,17 +155,11 @@ public class RatchetingSession {
                            new AuthKey(derivedSecrets[2], lastAuthKey, 0));
   }
 
-  private static byte[] deriveNewHash(byte[] newAuthKey, byte[] oldHash) throws InvalidKeyException {
-    byte[] newHashRaw = Arrays.copyOf(oldHash, oldHash.length + newAuthKey.length);
-    System.arraycopy(newAuthKey, 0, newHashRaw, oldHash.length, newAuthKey.length);
+  private static byte[] advanceHash(byte[] hash, byte[] rcpk) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
+    byte[] combined = ByteUtil.combine(hash, rcpk);
 
-    MessageDigest digest = null;
-    try {
-      digest = MessageDigest.getInstance("SHA-256");
-    } catch (NoSuchAlgorithmException e) {
-      throw new InvalidKeyException();
-    }
-    return digest.digest(newHashRaw);
+    return digest.digest(combined);
   }
 
   private static boolean isAlice(ECPublicKey ourKey, ECPublicKey theirKey) {
@@ -184,5 +184,7 @@ public class RatchetingSession {
     public ChainKey getChainKey() {
       return chainKey;
     }
+
+    public AuthKey getAuthKey() { return authKey; }
   }
 }

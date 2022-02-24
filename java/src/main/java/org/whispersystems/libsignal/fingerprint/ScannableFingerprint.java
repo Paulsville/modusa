@@ -57,14 +57,14 @@ public class ScannableFingerprint {
     try {
       CombinedFingerprints scanned = CombinedFingerprints.parseFrom(scannedFingerprintData);
 
-      if (!scanned.hasFingerprint() ||
+      if (!scanned.hasLocalFingerprint() ||
           !scanned.hasVersion() || scanned.getVersion() != version)
       {
         throw new FingerprintVersionMismatchException(scanned.getVersion(), version);
       }
 
-      return MessageDigest.isEqual(fingerprints.getFingerprint().getContent().toByteArray(), scanned.getFingerprint().getContent().toByteArray()) &&
-             MessageDigest.isEqual(fingerprints.getFingerprint().getContent().toByteArray(), scanned.getFingerprint().getContent().toByteArray());
+      return MessageDigest.isEqual(fingerprints.getLocalFingerprint().getContent().toByteArray(), scanned.getRemoteFingerprint().getContent().toByteArray()) &&
+             MessageDigest.isEqual(fingerprints.getRemoteFingerprint().getContent().toByteArray(), scanned.getLocalFingerprint().getContent().toByteArray());
     } catch (InvalidProtocolBufferException e) {
       throw new FingerprintParsingException(e);
     }
