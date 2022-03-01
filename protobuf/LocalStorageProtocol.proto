@@ -31,9 +31,6 @@ message SessionStructure {
         }
 
         optional AuthKey authKey = 5;
-
-        optional bytes fprintHash = 6;
-        optional bytes lastFprintHash = 7;
     }
 
     message PendingKeyExchange {
@@ -70,6 +67,9 @@ message SessionStructure {
 
     optional bool needsRefresh = 12;
     optional bytes aliceBaseKey = 13;
+
+    optional bytes fprintHash = 14;
+    optional bytes lastFprintHash = 15;
 }
 
 message RecordStructure {

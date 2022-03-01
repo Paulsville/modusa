@@ -22,6 +22,7 @@ import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.ECKey;
 
 /**
  * SessionBuilder is responsible for setting up encrypted sessions.
@@ -97,9 +98,11 @@ public class SessionBuilder {
       throws InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException
   {
     SignedPreKeyRecord signedPreKey = signedPreKeyStore.loadSignedPreKey(message.getSignedPreKeyId());
-    PreKeyRecord oneTimePreKey = preKeyStore.loadPreKey(message.getPreKeyId().get());
+    SessionState state = sessionRecord.getSessionState();
     IdentityKey ourIdentityKey = sessionRecord.getSessionState().getLocalIdentityKey();
     IdentityKey theirIdentityKey = message.getIdentityKey();
+    byte[] oneTimePreKey;
+
 
     if (!identityKeyStore.isTrustedIdentity(remoteAddress, theirIdentityKey, IdentityKeyStore.Direction.RECEIVING)) {
       throw new UntrustedIdentityException(remoteAddress.getName(), theirIdentityKey);
@@ -109,8 +112,20 @@ public class SessionBuilder {
 
     identityKeyStore.saveIdentity(remoteAddress, theirIdentityKey);
 
+    if(message.getPreKeyId().isPresent()) {
+      Optional<Integer> prekey = message.getPreKeyId();
+      try {
+        oneTimePreKey = preKeyStore.loadPreKey(prekey.get()).serialize();
+      } catch(InvalidKeyIdException e) {
+        oneTimePreKey = new byte[] {};
+      }
+    }
+    else {
+      oneTimePreKey = null;
+    }
+
     byte[] initialHash = genInitialHash(signedPreKey.serialize(),
-            oneTimePreKey.serialize(),
+            oneTimePreKey,
             ourIdentityKey.serialize(),
             theirIdentityKey.serialize());
 
@@ -130,8 +145,15 @@ public class SessionBuilder {
     }
 
     ECKeyPair ourSignedPreKey = signedPreKeyStore.loadSignedPreKey(message.getSignedPreKeyId()).getKeyPair();
-    ECKeyPair ourOneTimePreKey = preKeyStore.loadPreKey(message.getPreKeyId().get()).getKeyPair();
+    ECKeyPair ourOneTimePreKey;
     IdentityKeyPair ourIdentityKey = identityKeyStore.getIdentityKeyPair();
+
+    if(message.getPreKeyId().isPresent()) {
+      ourOneTimePreKey = preKeyStore.loadPreKey(message.getPreKeyId().get()).getKeyPair();
+    }
+    else {
+      ourOneTimePreKey = null;
+    }
 
     BobSignalProtocolParameters.Builder parameters = BobSignalProtocolParameters.newBuilder();
 
@@ -185,7 +207,7 @@ public class SessionBuilder {
    *                                                                  {@link IdentityKey} is not
    *                                                                  trusted.
    */
-  public void process(PreKeyBundle preKey) throws InvalidKeyException, InvalidKeyIdException, UntrustedIdentityException, NoSuchAlgorithmException {
+  public void process(PreKeyBundle preKey) throws InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException {
     synchronized (SessionCipher.SESSION_LOCK) {
       if (!identityKeyStore.isTrustedIdentity(remoteAddress, preKey.getIdentityKey(), IdentityKeyStore.Direction.SENDING)) {
         throw new UntrustedIdentityException(remoteAddress.getName(), preKey.getIdentityKey());
@@ -212,7 +234,6 @@ public class SessionBuilder {
 
       AliceSignalProtocolParameters.Builder parameters = AliceSignalProtocolParameters.newBuilder();
 
-      ECKeyPair ourOneTimePreKey = preKeyStore.loadPreKey(preKey.getPreKeyId()).getKeyPair();
       IdentityKeyPair ourIdentityKey = identityKeyStore.getIdentityKeyPair();
 
       parameters.setOurBaseKey(ourBaseKey)
@@ -226,9 +247,11 @@ public class SessionBuilder {
 
 
       byte[] initialHash = genInitialHash(preKey.getSignedPreKey().serialize(), //pkb
-              ourOneTimePreKey.getPublicKey().serialize(), //otpk
+              theirOneTimePreKey.get().serialize(), //otpk
               preKey.getIdentityKey().serialize(), //alice's key
               ourIdentityKey.serialize()); //bob's key
+
+      sessionRecord.getSessionState().setFprintHash(initialHash);
 
       RatchetingSession.initializeSession(sessionRecord.getSessionState(), parameters.create());
 
@@ -236,12 +259,6 @@ public class SessionBuilder {
       sessionRecord.getSessionState().setLocalRegistrationId(identityKeyStore.getLocalRegistrationId());
       sessionRecord.getSessionState().setRemoteRegistrationId(preKey.getRegistrationId());
       sessionRecord.getSessionState().setAliceBaseKey(ourBaseKey.getPublicKey().serialize());
-
-      byte[] hash1 = initialHash;
-      byte[] hash2 = advanceHash(initialHash, sessionRecord.getSessionState().getSenderRatchetKey().serialize());
-
-      sessionRecord.getSessionState().setLastFprintHash(hash1);
-      sessionRecord.getSessionState().setFprintHash(hash2);
 
       identityKeyStore.saveIdentity(remoteAddress, preKey.getIdentityKey());
       sessionStore.storeSession(remoteAddress, sessionRecord);

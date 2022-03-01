@@ -87,8 +87,16 @@ public class RatchetingSession {
       sessionState.setRootKey(sendingChain.first());
 
       sessionState.setAuthKey(derivedKeys.getAuthKey());
-      sessionState.setLastFprintHash(sessionState.getFprintHash());
-      sessionState.setFprintHash(advanceHash(sessionState.getFprintHash(), derivedKeys.getRootKey().getKeyBytes()));
+
+      if(sessionState.getLastFprintHash().length < 1) { //only if on first ratchet on alice's side
+        byte[] nextHash = sessionState.getFprintHash();
+        sessionState.setLastFprintHash(nextHash);
+      } else {
+        byte[] nextHash = advanceHash(sessionState.getFprintHash(), parameters.getTheirRatchetKey().serialize());
+        sessionState.setLastFprintHash(nextHash);
+      }
+      sessionState.setFprintHash(advanceHash(sessionState.getLastFprintHash(), sendingRatchetKey.getPublicKey().serialize()));
+
 
     } catch (IOException e) {
       throw new AssertionError(e);
@@ -126,8 +134,8 @@ public class RatchetingSession {
       sessionState.setRootKey(derivedKeys.getRootKey());
       sessionState.setAuthKey(derivedKeys.getAuthKey());
 
-      sessionState.setLastFprintHash(sessionState.getFprintHash());
-      sessionState.setFprintHash(advanceHash(sessionState.getFprintHash(), derivedKeys.getRootKey().getKeyBytes()));
+      sessionState.setLastFprintHash(advanceHash(sessionState.getFprintHash(), parameters.getOurRatchetKey().getPublicKey().serialize()));
+      sessionState.setFprintHash(advanceHash(sessionState.getLastFprintHash(), Curve.generateKeyPair().getPublicKey().serialize()));
 
     } catch (IOException e) {
       throw new AssertionError(e);
