@@ -278,6 +278,7 @@ public class SessionBuilderTest extends TestCase {
 
     bobStore.storePreKey(31337, new PreKeyRecord(bobPreKey.getPreKeyId(), bobPreKeyPair));
     bobStore.storeSignedPreKey(22, new SignedPreKeyRecord(22, System.currentTimeMillis(), bobSignedPreKeyPair, bobSignedPreKeySignature));
+    bobStore.getIdentityKeyPair();
 
     aliceSessionBuilder.process(bobPreKey);
 

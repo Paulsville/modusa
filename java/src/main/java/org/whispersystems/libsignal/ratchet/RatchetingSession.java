@@ -88,15 +88,13 @@ public class RatchetingSession {
 
       sessionState.setAuthKey(derivedKeys.getAuthKey());
 
-      if(sessionState.getLastFprintHash().length < 1) { //only if on first ratchet on alice's side
-        byte[] nextHash = sessionState.getFprintHash();
-        sessionState.setLastFprintHash(nextHash);
-      } else {
-        byte[] nextHash = advanceHash(sessionState.getFprintHash(), parameters.getTheirRatchetKey().serialize());
-        sessionState.setLastFprintHash(nextHash);
+      byte[] nextHash = sessionState.getFprintHash();
+      if(sessionState.getLastFprintHash().length > 1) { // only after first ratchet on alice's side (so a previous hash exists)
+        // need to advance once with their ratchet key before advancing with ours
+        nextHash = advanceHash(sessionState.getFprintHash(), parameters.getTheirRatchetKey().serialize());
       }
+      sessionState.setLastFprintHash(nextHash);
       sessionState.setFprintHash(advanceHash(sessionState.getLastFprintHash(), sendingRatchetKey.getPublicKey().serialize()));
-
 
     } catch (IOException e) {
       throw new AssertionError(e);

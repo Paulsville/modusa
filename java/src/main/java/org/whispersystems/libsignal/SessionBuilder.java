@@ -98,8 +98,6 @@ public class SessionBuilder {
       throws InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException
   {
     SignedPreKeyRecord signedPreKey = signedPreKeyStore.loadSignedPreKey(message.getSignedPreKeyId());
-    SessionState state = sessionRecord.getSessionState();
-    IdentityKey ourIdentityKey = sessionRecord.getSessionState().getLocalIdentityKey();
     IdentityKey theirIdentityKey = message.getIdentityKey();
     byte[] oneTimePreKey;
 
@@ -121,8 +119,10 @@ public class SessionBuilder {
       }
     }
     else {
-      oneTimePreKey = null;
+      oneTimePreKey = Curve.generateKeyPair().getPublicKey().serialize();
     }
+
+    IdentityKey ourIdentityKey = sessionRecord.getSessionState().getLocalIdentityKey();
 
     byte[] initialHash = genInitialHash(signedPreKey.serialize(),
             oneTimePreKey,
@@ -152,7 +152,7 @@ public class SessionBuilder {
       ourOneTimePreKey = preKeyStore.loadPreKey(message.getPreKeyId().get()).getKeyPair();
     }
     else {
-      ourOneTimePreKey = null;
+      ourOneTimePreKey = Curve.generateKeyPair();
     }
 
     BobSignalProtocolParameters.Builder parameters = BobSignalProtocolParameters.newBuilder();
@@ -244,7 +244,7 @@ public class SessionBuilder {
                 .setTheirOneTimePreKey(theirOneTimePreKey);
 
       if (!sessionRecord.isFresh()) sessionRecord.archiveCurrentState();
-
+      if(!theirOneTimePreKey.isPresent()) { theirOneTimePreKey = Optional.of(Curve.generateKeyPair().getPublicKey()); }
 
       byte[] initialHash = genInitialHash(preKey.getSignedPreKey().serialize(), //pkb
               theirOneTimePreKey.get().serialize(), //otpk
