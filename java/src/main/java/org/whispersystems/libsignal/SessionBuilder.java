@@ -16,13 +16,9 @@ import org.whispersystems.libsignal.ratchet.AliceSignalProtocolParameters;
 import org.whispersystems.libsignal.ratchet.BobSignalProtocolParameters;
 import org.whispersystems.libsignal.ratchet.RatchetingSession;
 import org.whispersystems.libsignal.state.*;
-import org.whispersystems.libsignal.util.ByteUtil;
-import org.whispersystems.libsignal.util.Medium;
 import org.whispersystems.libsignal.util.guava.Optional;
 
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.ECKey;
 
 /**
  * SessionBuilder is responsible for setting up encrypted sessions.
@@ -97,10 +93,7 @@ public class SessionBuilder {
   /*package*/ Optional<Integer> process(SessionRecord sessionRecord, PreKeySignalMessage message)
       throws InvalidKeyIdException, InvalidKeyException, UntrustedIdentityException, NoSuchAlgorithmException
   {
-    SignedPreKeyRecord signedPreKey = signedPreKeyStore.loadSignedPreKey(message.getSignedPreKeyId());
     IdentityKey theirIdentityKey = message.getIdentityKey();
-    byte[] oneTimePreKey;
-
 
     if (!identityKeyStore.isTrustedIdentity(remoteAddress, theirIdentityKey, IdentityKeyStore.Direction.RECEIVING)) {
       throw new UntrustedIdentityException(remoteAddress.getName(), theirIdentityKey);
@@ -110,33 +103,11 @@ public class SessionBuilder {
 
     identityKeyStore.saveIdentity(remoteAddress, theirIdentityKey);
 
-    if(message.getPreKeyId().isPresent()) {
-      Optional<Integer> prekey = message.getPreKeyId();
-      try {
-        oneTimePreKey = preKeyStore.loadPreKey(prekey.get()).serialize();
-      } catch(InvalidKeyIdException e) {
-        oneTimePreKey = new byte[] {};
-      }
-    }
-    else {
-      oneTimePreKey = Curve.generateKeyPair().getPublicKey().serialize();
-    }
-
-    IdentityKey ourIdentityKey = sessionRecord.getSessionState().getLocalIdentityKey();
-
-    byte[] initialHash = genInitialHash(signedPreKey.serialize(),
-            oneTimePreKey,
-            ourIdentityKey.serialize(),
-            theirIdentityKey.serialize());
-
-    sessionRecord.getSessionState().setLastFprintHash(initialHash);
-    sessionRecord.getSessionState().setFprintHash(advanceHash(initialHash, sessionRecord.getSessionState().getSenderRatchetKey().serialize()));
-
     return unsignedPreKeyId;
   }
 
   private Optional<Integer> processV3(SessionRecord sessionRecord, PreKeySignalMessage message)
-      throws UntrustedIdentityException, InvalidKeyIdException, InvalidKeyException, NoSuchAlgorithmException
+      throws InvalidKeyIdException, InvalidKeyException, NoSuchAlgorithmException
   {
 
     if (sessionRecord.hasSessionState(message.getMessageVersion(), message.getBaseKey().serialize())) {
@@ -171,23 +142,11 @@ public class SessionBuilder {
 
     if (!sessionRecord.isFresh()) sessionRecord.archiveCurrentState();
 
-    byte[] initialHash = genInitialHash(ourSignedPreKey.getPublicKey().serialize(),
-            ourOneTimePreKey.getPublicKey().serialize(),
-            message.getIdentityKey().serialize(), //alice's key
-            ourIdentityKey.serialize()); //bob's key
-
     RatchetingSession.initializeSession(sessionRecord.getSessionState(), parameters.create());
 
     sessionRecord.getSessionState().setLocalRegistrationId(identityKeyStore.getLocalRegistrationId());
     sessionRecord.getSessionState().setRemoteRegistrationId(message.getRegistrationId());
     sessionRecord.getSessionState().setAliceBaseKey(message.getBaseKey().serialize());
-
-    byte[] hash1 = advanceHash(initialHash, message.getWhisperMessage().getSenderRatchetKey().serialize()); //use alice's public ratchet key from the prekey message to generate previous hash here...
-    byte[] hash2 = advanceHash(hash1, sessionRecord.getSessionState().getSenderRatchetKey().serialize()); //...then advance it with bob's key
-
-    sessionRecord.getSessionState().setLastFprintHash(hash1);
-    sessionRecord.getSessionState().setFprintHash(hash2);
-
 
     if (message.getPreKeyId().isPresent()) {
       return message.getPreKeyId();
@@ -234,8 +193,6 @@ public class SessionBuilder {
 
       AliceSignalProtocolParameters.Builder parameters = AliceSignalProtocolParameters.newBuilder();
 
-      IdentityKeyPair ourIdentityKey = identityKeyStore.getIdentityKeyPair();
-
       parameters.setOurBaseKey(ourBaseKey)
                 .setOurIdentityKey(identityKeyStore.getIdentityKeyPair())
                 .setTheirIdentityKey(preKey.getIdentityKey())
@@ -244,14 +201,6 @@ public class SessionBuilder {
                 .setTheirOneTimePreKey(theirOneTimePreKey);
 
       if (!sessionRecord.isFresh()) sessionRecord.archiveCurrentState();
-      if(!theirOneTimePreKey.isPresent()) { theirOneTimePreKey = Optional.of(Curve.generateKeyPair().getPublicKey()); }
-
-      byte[] initialHash = genInitialHash(preKey.getSignedPreKey().serialize(), //pkb
-              theirOneTimePreKey.get().serialize(), //otpk
-              preKey.getIdentityKey().serialize(), //alice's key
-              ourIdentityKey.serialize()); //bob's key
-
-      sessionRecord.getSessionState().setFprintHash(initialHash);
 
       RatchetingSession.initializeSession(sessionRecord.getSessionState(), parameters.create());
 
@@ -264,19 +213,4 @@ public class SessionBuilder {
       sessionStore.storeSession(remoteAddress, sessionRecord);
     }
   }
-
-  public byte[] genInitialHash(byte[] pkb, byte[] otpk, byte[] idpkA, byte[] idpkB) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    byte[] combined = ByteUtil.combine(pkb, otpk, idpkA, idpkB);
-
-    return digest.digest(combined);
-  }
-
-  public byte[] advanceHash(byte[] hash, byte[] rcpk) throws NoSuchAlgorithmException {
-    MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    byte[] combined = ByteUtil.combine(hash, rcpk);
-
-    return digest.digest(combined);
-  }
-
 }

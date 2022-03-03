@@ -69,6 +69,31 @@ public class SessionCipherTest extends TestCase {
     }
   }
 
+  public void testAccurateChainHashing() throws Exception {
+    SessionRecord aliceSessionRecord = new SessionRecord();
+    SessionRecord bobSessionRecord   = new SessionRecord();
+
+    initializeSessionsV3(aliceSessionRecord.getSessionState(), bobSessionRecord.getSessionState());
+
+    runInteraction(aliceSessionRecord, bobSessionRecord);
+
+    byte[] aliceHash1 = aliceSessionRecord.getSessionState().getLastFprintHash();
+    byte[] aliceHash2 = aliceSessionRecord.getSessionState().getFprintHash();
+
+    byte[] bobHash1 = bobSessionRecord.getSessionState().getLastFprintHash();
+    byte[] bobHash2 = bobSessionRecord.getSessionState().getFprintHash();
+
+    // hashes should not be equal across epochs
+    assertFalse(Arrays.equals(aliceHash1, aliceHash2));
+    assertFalse(Arrays.equals(bobHash1, bobHash2));
+
+    // hashes should not be exactly in step - alice should always be 1 step behind bob
+    assertFalse(Arrays.equals(aliceHash1, bobHash1));
+    assertFalse(Arrays.equals(aliceHash2, bobHash2));
+    assertFalse(Arrays.equals(aliceHash2, bobHash1));
+    assertTrue(Arrays.equals(aliceHash1, bobHash2));
+  }
+
   private void runInteraction(SessionRecord aliceSessionRecord, SessionRecord bobSessionRecord)
       throws DuplicateMessageException, LegacyMessageException, InvalidMessageException, NoSuchAlgorithmException, NoSessionException, UntrustedIdentityException {
     SignalProtocolStore aliceStore = new TestInMemorySignalProtocolStore();

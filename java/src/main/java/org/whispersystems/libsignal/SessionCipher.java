@@ -22,10 +22,12 @@ import org.whispersystems.libsignal.state.SessionRecord;
 import org.whispersystems.libsignal.state.SessionState;
 import org.whispersystems.libsignal.state.SessionStore;
 import org.whispersystems.libsignal.state.SignedPreKeyStore;
+import org.whispersystems.libsignal.util.ByteUtil;
 import org.whispersystems.libsignal.util.Triplet;
 import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.security.InvalidAlgorithmParameterException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -206,7 +208,7 @@ public class SessionCipher {
    */
   public byte[] decrypt(SignalMessage ciphertext)
       throws InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-      NoSessionException, UntrustedIdentityException
+      NoSessionException, UntrustedIdentityException, NoSuchAlgorithmException
   {
     return decrypt(ciphertext, new NullDecryptionCallback());
   }
@@ -231,7 +233,7 @@ public class SessionCipher {
    */
   public byte[] decrypt(SignalMessage ciphertext, DecryptionCallback callback)
       throws InvalidMessageException, DuplicateMessageException, LegacyMessageException,
-             NoSessionException, UntrustedIdentityException
+             NoSessionException, UntrustedIdentityException, NoSuchAlgorithmException
   {
     synchronized (SESSION_LOCK) {
 
@@ -257,7 +259,7 @@ public class SessionCipher {
   }
 
   private byte[] decrypt(SessionRecord sessionRecord, SignalMessage ciphertext)
-      throws DuplicateMessageException, LegacyMessageException, InvalidMessageException
+      throws DuplicateMessageException, LegacyMessageException, InvalidMessageException, NoSuchAlgorithmException
   {
     synchronized (SESSION_LOCK) {
       Iterator<SessionState> previousStates = sessionRecord.getPreviousSessionStates().iterator();
@@ -292,7 +294,7 @@ public class SessionCipher {
   }
 
   private byte[] decrypt(SessionState sessionState, SignalMessage ciphertextMessage)
-      throws InvalidMessageException, DuplicateMessageException, LegacyMessageException
+      throws InvalidMessageException, DuplicateMessageException, LegacyMessageException, NoSuchAlgorithmException
   {
     if (!sessionState.hasSenderChain()) {
       throw new InvalidMessageException("Uninitialized session!");
@@ -340,7 +342,7 @@ public class SessionCipher {
   }
 
   private ChainKey getOrCreateChainKey(SessionState sessionState, ECPublicKey theirEphemeral)
-      throws InvalidMessageException
+      throws InvalidMessageException, NoSuchAlgorithmException
   {
     try {
       if (sessionState.hasReceiverChain(theirEphemeral)) {
@@ -356,6 +358,13 @@ public class SessionCipher {
         sessionState.addReceiverChain(theirEphemeral, receiverChain.second());
         sessionState.setPreviousCounter(Math.max(sessionState.getSenderChainKey().getIndex()-1, 0));
         sessionState.setSenderChain(ourNewEphemeral, senderChain.second());
+
+        byte[] lastHash = advanceHash(sessionState.getFprintHash(), theirEphemeral.serialize());
+
+        sessionState.setLastFprintHash(lastHash);
+        sessionState.setFprintHash(advanceHash(lastHash, ourNewEphemeral.getPublicKey().serialize()));
+
+
 
         return receiverChain.second();
       }
@@ -410,6 +419,13 @@ public class SessionCipher {
     } catch (IllegalBlockSizeException | BadPaddingException e) {
       throw new InvalidMessageException(e);
     }
+  }
+
+  private byte[] advanceHash(byte[] hash, byte[] rcpk) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
+    byte[] combined = ByteUtil.combine(hash, rcpk);
+
+    return digest.digest(combined);
   }
 
   private Cipher getCipher(int mode, SecretKeySpec key, IvParameterSpec iv) {

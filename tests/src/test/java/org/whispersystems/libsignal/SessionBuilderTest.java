@@ -359,7 +359,7 @@ public class SessionBuilderTest extends TestCase {
 
 
   private void runInteraction(SignalProtocolStore aliceStore, SignalProtocolStore bobStore)
-      throws DuplicateMessageException, LegacyMessageException, InvalidMessageException, NoSessionException, UntrustedIdentityException
+      throws DuplicateMessageException, LegacyMessageException, InvalidMessageException, NoSessionException, UntrustedIdentityException, NoSuchAlgorithmException
   {
     SessionCipher aliceSessionCipher = new SessionCipher(aliceStore, BOB_ADDRESS);
     SessionCipher bobSessionCipher   = new SessionCipher(bobStore, ALICE_ADDRESS);

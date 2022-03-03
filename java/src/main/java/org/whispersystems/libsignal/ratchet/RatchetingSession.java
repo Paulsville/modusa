@@ -88,12 +88,20 @@ public class RatchetingSession {
 
       sessionState.setAuthKey(derivedKeys.getAuthKey());
 
-      byte[] nextHash = sessionState.getFprintHash();
-      if(sessionState.getLastFprintHash().length > 1) { // only after first ratchet on alice's side (so a previous hash exists)
-        // need to advance once with their ratchet key before advancing with ours
-        nextHash = advanceHash(sessionState.getFprintHash(), parameters.getTheirRatchetKey().serialize());
+      byte[] initialHash;
+
+      if(parameters.getTheirOneTimePreKey().isPresent()) {
+        initialHash = genInitialHash(parameters.getTheirSignedPreKey().serialize(),
+                parameters.getTheirOneTimePreKey().get().serialize(),
+                parameters.getOurIdentityKey().getPublicKey().serialize(),
+                parameters.getTheirIdentityKey().getPublicKey().serialize());
+      } else {
+        initialHash = genInitialHash(parameters.getTheirSignedPreKey().serialize(),
+                parameters.getOurIdentityKey().getPublicKey().serialize(),
+                parameters.getTheirIdentityKey().getPublicKey().serialize());
       }
-      sessionState.setLastFprintHash(nextHash);
+
+      sessionState.setLastFprintHash(advanceHash(initialHash, parameters.getTheirRatchetKey().serialize()));
       sessionState.setFprintHash(advanceHash(sessionState.getLastFprintHash(), sendingRatchetKey.getPublicKey().serialize()));
 
     } catch (IOException e) {
@@ -132,8 +140,21 @@ public class RatchetingSession {
       sessionState.setRootKey(derivedKeys.getRootKey());
       sessionState.setAuthKey(derivedKeys.getAuthKey());
 
-      sessionState.setLastFprintHash(advanceHash(sessionState.getFprintHash(), parameters.getOurRatchetKey().getPublicKey().serialize()));
-      sessionState.setFprintHash(advanceHash(sessionState.getLastFprintHash(), Curve.generateKeyPair().getPublicKey().serialize()));
+      byte[] initialHash;
+
+      if(parameters.getOurOneTimePreKey().isPresent()) {
+        initialHash = genInitialHash(parameters.getOurSignedPreKey().getPublicKey().serialize(),
+                parameters.getOurOneTimePreKey().get().getPublicKey().serialize(),
+                parameters.getTheirIdentityKey().getPublicKey().serialize(),
+                parameters.getOurIdentityKey().getPublicKey().serialize());
+      } else {
+        initialHash = genInitialHash(parameters.getOurSignedPreKey().getPublicKey().serialize(),
+                parameters.getTheirIdentityKey().getPublicKey().serialize(),
+                parameters.getOurIdentityKey().getPublicKey().serialize());
+      }
+
+      sessionState.setLastFprintHash(initialHash);
+      sessionState.setFprintHash(advanceHash(initialHash, parameters.getOurRatchetKey().getPublicKey().serialize()));
 
     } catch (IOException e) {
       throw new AssertionError(e);
@@ -159,6 +180,20 @@ public class RatchetingSession {
     return new DerivedKeys(new RootKey(kdf, derivedSecrets[0]),
                            new ChainKey(kdf, derivedSecrets[1], 0),
                            new AuthKey(derivedSecrets[2], lastAuthKey, 0));
+  }
+
+  private static byte[] genInitialHash(byte[] preKey, byte[] otpk, byte[] idpkA, byte[] idpkB) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
+    byte[] combined = ByteUtil.combine(preKey, otpk, idpkA, idpkB);
+
+    return digest.digest(combined);
+  }
+
+  private static byte[] genInitialHash(byte[] preKey, byte[] idpkA, byte[] idpkB) throws NoSuchAlgorithmException {
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
+    byte[] combined = ByteUtil.combine(preKey, idpkA, idpkB);
+
+    return digest.digest(combined);
   }
 
   private static byte[] advanceHash(byte[] hash, byte[] rcpk) throws NoSuchAlgorithmException {
