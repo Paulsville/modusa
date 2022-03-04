@@ -359,12 +359,12 @@ public class SessionCipher {
         sessionState.setPreviousCounter(Math.max(sessionState.getSenderChainKey().getIndex()-1, 0));
         sessionState.setSenderChain(ourNewEphemeral, senderChain.second());
 
-        byte[] lastHash = advanceHash(sessionState.getFprintHash(), theirEphemeral.serialize());
+        byte[] current = sessionState.getFprintHash();
+        byte[] newLastHash = advanceHash(current, theirEphemeral.serialize());
+        byte[] newCurrentHash = advanceHash(newLastHash, ourNewEphemeral.getPublicKey().serialize());
 
-        sessionState.setLastFprintHash(lastHash);
-        sessionState.setFprintHash(advanceHash(lastHash, ourNewEphemeral.getPublicKey().serialize()));
-
-
+        sessionState.setLastFprintHash(newLastHash);
+        sessionState.setFprintHash(newCurrentHash);
 
         return receiverChain.second();
       }

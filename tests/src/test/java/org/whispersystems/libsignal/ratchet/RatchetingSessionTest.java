@@ -255,7 +255,7 @@ public class RatchetingSessionTest extends TestCase {
 
   }
 
-  public void testModusaHashing() throws InvalidKeyException, NoSuchAlgorithmException {
+  public void testModusaHashInitialisation() throws InvalidKeyException, NoSuchAlgorithmException {
     byte[] bobPublic             = {(byte) 0x05, (byte) 0x2c, (byte) 0xb4, (byte) 0x97, (byte) 0x76,
             (byte) 0xb8, (byte) 0x77, (byte) 0x02, (byte) 0x05, (byte) 0x74,
             (byte) 0x5a, (byte) 0x3a, (byte) 0x6e, (byte) 0x24, (byte) 0xf5,
